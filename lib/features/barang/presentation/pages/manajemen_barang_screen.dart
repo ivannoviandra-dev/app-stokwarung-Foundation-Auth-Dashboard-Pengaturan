@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/models/barang_model.dart';
 import '../providers/barang_provider.dart';
+import 'tambah_barang_screen.dart';
 
 class ManajemenBarangScreen extends ConsumerStatefulWidget {
   const ManajemenBarangScreen({super.key});
@@ -227,7 +228,14 @@ class _ManajemenBarangScreenState extends ConsumerState<ManajemenBarangScreen> {
                 FloatingActionButton(
                   heroTag: 'add_fab',
                   backgroundColor: primaryGreen,
-                  onPressed: () => _showTambahDialog(context),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const TambahBarangScreen(),
+                      ),
+                    );
+                  },
                   child: const Icon(Icons.add, color: Colors.white),
                 ),
               ],
