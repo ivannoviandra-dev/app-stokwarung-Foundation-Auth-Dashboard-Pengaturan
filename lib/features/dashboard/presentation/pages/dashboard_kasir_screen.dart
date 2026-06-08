@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../pengaturan/presentation/providers/settings_provider.dart';
+
+import '../../../../features/kasir/presentation/pages/kasir_screen.dart';
+import '../../../../features/utang/presentation/pages/buku_utang_screen.dart';
+import '../../../../features/pengaturan/presentation/pages/pengaturan_kasir_screen.dart';
 
 class DashboardKasirScreen extends ConsumerStatefulWidget {
   const DashboardKasirScreen({super.key});
@@ -20,47 +22,59 @@ class _DashboardKasirScreenState extends ConsumerState<DashboardKasirScreen> {
 
     return Scaffold(
       backgroundColor: c.background,
-      appBar: _buildAppBar(c),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Welcome Section
-              Text(
-                'Selamat bekerja,',
-                style: TextStyle(color: c.greyText, fontSize: 14),
+      appBar: _selectedIndex == 0 ? _buildAppBar(c) : null,
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: [
+          // Index 0: Beranda
+          SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Welcome Section
+                  Text(
+                    'Selamat bekerja,',
+                    style: TextStyle(color: c.greyText, fontSize: 14),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Halo, Budi! 👋',
+                    style: TextStyle(
+                      color: c.darkText,
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Main Action: Mulai Transaksi
+                  _buildMainAction(c),
+                  const SizedBox(height: 24),
+
+                  // Bento Grid
+                  _buildBentoGrid(c),
+                  const SizedBox(height: 24),
+
+                  // Recent Activity Feed
+                  _buildRecentActivity(c),
+                  const SizedBox(height: 24),
+
+                  // Tip Card
+                  _buildTipCard(c),
+                  const SizedBox(height: 24),
+                ],
               ),
-              const SizedBox(height: 4),
-              Text(
-                'Halo, Budi! 👋',
-                style: TextStyle(
-                  color: c.darkText,
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // Main Action: Mulai Transaksi
-              _buildMainAction(c),
-              const SizedBox(height: 24),
-
-              // Bento Grid
-              _buildBentoGrid(c),
-              const SizedBox(height: 24),
-
-              // Recent Activity Feed
-              _buildRecentActivity(c),
-              const SizedBox(height: 24),
-
-              // Tip Card
-              _buildTipCard(c),
-              const SizedBox(height: 24),
-            ],
+            ),
           ),
-        ),
+          // Index 1: Kasir
+          const KasirScreen(),
+          // Index 2: Utang
+          const BukuUtangScreen(),
+          // Index 3: Atur
+          const PengaturanKasirScreen(),
+        ],
       ),
       bottomNavigationBar: _buildBottomNav(c),
     );
@@ -119,7 +133,9 @@ class _DashboardKasirScreenState extends ConsumerState<DashboardKasirScreen> {
   Widget _buildMainAction(AppColors c) {
     return InkWell(
       onTap: () {
-        context.push('/kasir'); // Ke halaman transaksi
+        setState(() {
+          _selectedIndex = 1; // Ke halaman transaksi kasir
+        });
       },
       borderRadius: BorderRadius.circular(16),
       child: Container(
@@ -228,7 +244,11 @@ class _DashboardKasirScreenState extends ConsumerState<DashboardKasirScreen> {
                 icon: Icons.qr_code_scanner,
                 title: 'Cari / Scan Barang',
                 iconColor: c.primaryGreen,
-                onTap: () {},
+                onTap: () {
+                  setState(() {
+                    _selectedIndex = 1;
+                  });
+                },
               ),
             ),
             const SizedBox(width: 12),
@@ -238,7 +258,11 @@ class _DashboardKasirScreenState extends ConsumerState<DashboardKasirScreen> {
                 icon: Icons.menu_book,
                 title: 'Buku Utang',
                 iconColor: c.tertiary,
-                onTap: () {},
+                onTap: () {
+                  setState(() {
+                    _selectedIndex = 2;
+                  });
+                },
               ),
             ),
           ],
@@ -298,9 +322,16 @@ class _DashboardKasirScreenState extends ConsumerState<DashboardKasirScreen> {
               'Aktivitas Terakhir',
               style: TextStyle(color: c.darkText, fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            Text(
-              'Lihat Semua',
-              style: TextStyle(color: c.primaryGreen, fontSize: 12, fontWeight: FontWeight.w600),
+            InkWell(
+              onTap: () => _showRiwayatSheet(context),
+              borderRadius: BorderRadius.circular(8),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                child: Text(
+                  'Lihat Semua',
+                  style: TextStyle(color: c.primaryGreen, fontSize: 12, fontWeight: FontWeight.w600),
+                ),
+              ),
             ),
           ],
         ),
@@ -312,6 +343,7 @@ class _DashboardKasirScreenState extends ConsumerState<DashboardKasirScreen> {
           amount: 'Rp45.000',
           icon: Icons.shopping_bag_outlined,
           amountColor: c.primaryGreen,
+          onTap: () => _showDetailTransaksi(context, c, 'Penjualan Sembako', '10:45 WIB', 'Tunai', 'Rp45.000'),
         ),
         const SizedBox(height: 8),
         _buildActivityItem(
@@ -321,6 +353,7 @@ class _DashboardKasirScreenState extends ConsumerState<DashboardKasirScreen> {
           amount: 'Rp12.500',
           icon: Icons.person_off_outlined,
           amountColor: c.tertiary,
+          onTap: () => _showDetailTransaksi(context, c, 'Utang: Pak RT', '09:12 WIB', 'Catat Utang', 'Rp12.500'),
         ),
       ],
     );
@@ -333,77 +366,274 @@ class _DashboardKasirScreenState extends ConsumerState<DashboardKasirScreen> {
     required String amount,
     required IconData icon,
     required Color amountColor,
+    VoidCallback? onTap,
   }) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: c.outlineVariant),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: c.surfaceContainer,
-                  shape: BoxShape.circle,
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: c.cardColor,
+          border: Border.all(color: c.outlineVariant),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: c.surfaceContainer,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icon, color: c.greyText, size: 20),
                 ),
-                child: Icon(icon, color: c.greyText, size: 20),
-              ),
-              const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: TextStyle(color: c.darkText, fontSize: 14, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 4),
-                  Text(timeInfo, style: TextStyle(color: c.greyText, fontSize: 12)),
-                ],
-              ),
-            ],
-          ),
-          Text(amount, style: TextStyle(color: amountColor, fontSize: 16, fontWeight: FontWeight.bold)),
-        ],
+                const SizedBox(width: 12),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title, style: TextStyle(color: c.darkText, fontSize: 14, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 4),
+                    Text(timeInfo, style: TextStyle(color: c.greyText, fontSize: 12)),
+                  ],
+                ),
+              ],
+            ),
+            Text(amount, style: TextStyle(color: amountColor, fontSize: 16, fontWeight: FontWeight.bold)),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildTipCard(AppColors c) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: c.secondary,
-        borderRadius: BorderRadius.circular(16),
+    return InkWell(
+      onTap: () {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('💡 Tips disimpan!'),
+            backgroundColor: c.secondary,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+        );
+      },
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: c.secondary,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              flex: 2,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Tips Hari Ini',
+                    style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Selalu cek stok barang yang paling laku setiap sore hari agar tidak kehabisan.',
+                    style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              flex: 1,
+              child: Icon(Icons.lightbulb, color: Colors.white.withOpacity(0.2), size: 80),
+            ),
+          ],
+        ),
       ),
-      child: Row(
-        children: [
-          Expanded(
-            flex: 2,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    );
+  }
+
+  // ─── Riwayat Transaksi Bottom Sheet ───────────────────────────────
+  void _showRiwayatSheet(BuildContext context) {
+    final c = AppColors.of(context);
+    final List<Map<String, dynamic>> riwayat = [
+      {'title': 'Penjualan Sembako', 'time': '10:45 WIB', 'metode': 'Tunai', 'amount': 'Rp45.000', 'icon': Icons.shopping_bag_outlined, 'color': c.primaryGreen},
+      {'title': 'Utang: Pak RT', 'time': '09:12 WIB', 'metode': 'Catat Utang', 'amount': 'Rp12.500', 'icon': Icons.person_off_outlined, 'color': c.tertiary},
+      {'title': 'Penjualan Minuman', 'time': '08:30 WIB', 'metode': 'QRIS', 'amount': 'Rp23.000', 'icon': Icons.local_drink_outlined, 'color': c.primaryGreen},
+      {'title': 'Penjualan Snack', 'time': '08:15 WIB', 'metode': 'Tunai', 'amount': 'Rp15.500', 'icon': Icons.fastfood_outlined, 'color': c.primaryGreen},
+      {'title': 'Utang: Bu Siti', 'time': 'Kemarin, 16:20', 'metode': 'Catat Utang', 'amount': 'Rp35.000', 'icon': Icons.person_off_outlined, 'color': c.tertiary},
+      {'title': 'Penjualan Rokok', 'time': 'Kemarin, 14:05', 'metode': 'Tunai', 'amount': 'Rp52.000', 'icon': Icons.shopping_bag_outlined, 'color': c.primaryGreen},
+      {'title': 'Penjualan Beras', 'time': 'Kemarin, 11:30', 'metode': 'Tunai', 'amount': 'Rp65.000', 'icon': Icons.shopping_bag_outlined, 'color': c.primaryGreen},
+    ];
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: c.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.7,
+          minChildSize: 0.4,
+          maxChildSize: 0.9,
+          builder: (_, scrollController) {
+            return Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  // Handle bar
+                  Center(
+                    child: Container(
+                      width: 40, height: 4,
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: c.outlineVariant,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Riwayat Transaksi',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: c.darkText),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: c.primaryGreen.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Text(
+                          '${riwayat.length} Transaksi',
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: c.primaryGreen),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Expanded(
+                    child: ListView.separated(
+                      controller: scrollController,
+                      itemCount: riwayat.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 8),
+                      itemBuilder: (_, i) {
+                        final item = riwayat[i];
+                        return InkWell(
+                          onTap: () {
+                            Navigator.pop(ctx);
+                            _showDetailTransaksi(
+                              context, c,
+                              item['title'] as String,
+                              item['time'] as String,
+                              item['metode'] as String,
+                              item['amount'] as String,
+                            );
+                          },
+                          borderRadius: BorderRadius.circular(12),
+                          child: Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: c.cardColor,
+                              border: Border.all(color: c.outlineVariant),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 40, height: 40,
+                                  decoration: BoxDecoration(
+                                    color: c.surfaceContainer,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(item['icon'] as IconData, color: c.greyText, size: 20),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(item['title'] as String, style: TextStyle(color: c.darkText, fontSize: 14, fontWeight: FontWeight.bold)),
+                                      const SizedBox(height: 2),
+                                      Text('${item['time']} • ${item['metode']}', style: TextStyle(color: c.greyText, fontSize: 12)),
+                                    ],
+                                  ),
+                                ),
+                                Text(item['amount'] as String, style: TextStyle(color: item['color'] as Color, fontSize: 16, fontWeight: FontWeight.bold)),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  // ─── Detail Transaksi Dialog ──────────────────────────────────────
+  void _showDetailTransaksi(BuildContext context, AppColors c, String title, String time, String metode, String amount) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: c.surfaceContainerLow,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Icon(Icons.receipt_long, color: c.primary),
+            const SizedBox(width: 8),
+            Expanded(child: Text(title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: c.onSurface))),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _detailRow(c, 'Waktu', time),
+            const SizedBox(height: 12),
+            _detailRow(c, 'Metode', metode),
+            const SizedBox(height: 12),
+            Divider(color: c.outlineVariant),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'Tips Hari Ini',
-                  style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Selalu cek stok barang yang paling laku setiap sore hari agar tidak kehabisan.',
-                  style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 12),
-                ),
+                Text('Total', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: c.onSurface)),
+                Text(amount, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: c.primaryGreen)),
               ],
             ),
-          ),
-          Expanded(
-            flex: 1,
-            child: Icon(Icons.lightbulb, color: Colors.white.withOpacity(0.2), size: 80),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Tutup', style: TextStyle(color: c.onSurfaceVariant)),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _detailRow(AppColors c, String label, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: TextStyle(fontSize: 14, color: c.greyText)),
+        Text(value, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: c.onSurface)),
+      ],
     );
   }
 
@@ -414,13 +644,6 @@ class _DashboardKasirScreenState extends ConsumerState<DashboardKasirScreen> {
         setState(() {
           _selectedIndex = idx;
         });
-        if (idx == 1) {
-          context.push('/kasir');
-        } else if (idx == 2) {
-          context.push('/utang');
-        } else if (idx == 3) {
-          context.push('/atur');
-        }
       },
       type: BottomNavigationBarType.fixed,
       backgroundColor: c.surface,

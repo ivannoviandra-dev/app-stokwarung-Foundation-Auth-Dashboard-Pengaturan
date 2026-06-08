@@ -54,6 +54,8 @@ class AppColors {
   Color get statusCritical => const Color(0xFFEF4444);
   Color get profitGold => const Color(0xFFD4AF37);
   Color get tertiary => const Color(0xFFA43A3A);
+  Color get tertiaryContainer => isDark ? const Color(0xFF711419) : const Color(0xFFFC7C78);
+  Color get onTertiaryContainer => isDark ? const Color(0xFFFC7C78) : const Color(0xFF711419);
 
   // ─── Secondary ────────────────────────────────────────────────────
   Color get secondary => const Color(0xFF006398);
