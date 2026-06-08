@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/theme/app_colors.dart';
 
 class StrukPembayaranScreen extends StatelessWidget {
   final List<Map<String, dynamic>> keranjang;
@@ -22,34 +23,27 @@ class StrukPembayaranScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const primary = Color(0xFF006C49);
-    const background = Color(0xFFF4FBF4);
-    const onBackground = Color(0xFF161D19);
-    const onSurfaceVariant = Color(0xFF3C4A42);
-    const outlineVariant = Color(0xFFBBCABF);
-    const primaryContainer = Color(0xFF10B981);
-    const secondaryContainer = Color(0xFF5BB8FE);
-    const onSecondaryContainer = Color(0xFF00476E);
+    final c = AppColors.of(context);
     
     final date = DateTime.now();
     final dateString = "${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}";
     final transactionId = "TX-${DateTime.now().millisecondsSinceEpoch.toString().substring(5)}";
 
     return Scaffold(
-      backgroundColor: background,
+      backgroundColor: c.background,
       appBar: AppBar(
-        backgroundColor: background,
+        backgroundColor: c.background,
         elevation: 0,
         scrolledUnderElevation: 0,
         automaticallyImplyLeading: false,
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.storefront, color: primary),
-            SizedBox(width: 8),
+            Icon(Icons.storefront, color: c.primary),
+            const SizedBox(width: 8),
             Text(
               'Warung Pak Budi',
               style: TextStyle(
-                color: primary,
+                color: c.primary,
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
               ),
@@ -58,13 +52,13 @@ class StrukPembayaranScreen extends StatelessWidget {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.notifications_none, color: onSurfaceVariant),
+            icon: Icon(Icons.notifications_none, color: c.onSurfaceVariant),
             onPressed: () {},
           ),
         ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1.0),
-          child: Container(color: outlineVariant, height: 1.0),
+          child: Container(color: c.outlineVariant, height: 1.0),
         ),
       ),
       body: Stack(
@@ -74,7 +68,7 @@ class StrukPembayaranScreen extends StatelessWidget {
             child: Opacity(
               opacity: 0.03,
               child: CustomPaint(
-                painter: DotPatternPainter(),
+                painter: DotPatternPainter(color: c.primary),
               ),
             ),
           ),
@@ -91,7 +85,7 @@ class StrukPembayaranScreen extends StatelessWidget {
                         width: 80,
                         height: 80,
                         decoration: BoxDecoration(
-                          color: primaryContainer,
+                          color: c.primaryContainer,
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
@@ -103,20 +97,20 @@ class StrukPembayaranScreen extends StatelessWidget {
                         child: const Icon(Icons.check, color: Colors.white, size: 48),
                       ),
                       const SizedBox(height: 16),
-                      const Text(
+                      Text(
                         'Pembayaran Berhasil!',
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
-                          color: onBackground,
+                          color: c.onSurface,
                         ),
                       ),
                       const SizedBox(height: 4),
-                      const Text(
+                      Text(
                         'Transaksi Anda telah selesai diproses.',
                         style: TextStyle(
                           fontSize: 14,
-                          color: onSurfaceVariant,
+                          color: c.onSurfaceVariant,
                         ),
                       ),
                       const SizedBox(height: 32),
@@ -126,7 +120,7 @@ class StrukPembayaranScreen extends StatelessWidget {
                         width: double.infinity,
                         margin: const EdgeInsets.symmetric(horizontal: 8),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: c.cardColor,
                           borderRadius: BorderRadius.circular(8),
                           boxShadow: [
                             BoxShadow(
@@ -139,34 +133,34 @@ class StrukPembayaranScreen extends StatelessWidget {
                         child: ClipPath(
                           clipper: ZigZagClipper(),
                           child: Container(
-                            color: Colors.white,
+                            color: c.cardColor,
                             padding: const EdgeInsets.all(24.0),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 // Receipt Header
-                                const Text(
+                                Text(
                                   'Warung Pak Budi',
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
-                                    color: onBackground,
+                                    color: c.onSurface,
                                   ),
                                 ),
                                 const SizedBox(height: 4),
-                                const Text(
+                                Text(
                                   'JL. MELATI NO. 12, JAKARTA',
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w600,
                                     letterSpacing: 0.5,
-                                    color: onSurfaceVariant,
+                                    color: c.onSurfaceVariant,
                                   ),
                                 ),
                                 const SizedBox(height: 16),
-                                const Divider(color: outlineVariant),
+                                Divider(color: c.outlineVariant),
                                 const SizedBox(height: 16),
                                 
                                 Row(
@@ -177,17 +171,17 @@ class StrukPembayaranScreen extends StatelessWidget {
                                       children: [
                                         Text(
                                           dateString,
-                                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: onSurfaceVariant),
+                                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: c.onSurfaceVariant),
                                         ),
                                         Text(
                                           transactionId,
-                                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: onSurfaceVariant),
+                                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: c.onSurfaceVariant),
                                         ),
                                       ],
                                     ),
-                                    const Text(
+                                    Text(
                                       'Kasir: Admin',
-                                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: onSurfaceVariant),
+                                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: c.onSurfaceVariant),
                                     ),
                                   ],
                                 ),
@@ -212,18 +206,18 @@ class StrukPembayaranScreen extends StatelessWidget {
                                             children: [
                                               Text(
                                                 nama,
-                                                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: onBackground),
+                                                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: c.onSurface),
                                               ),
                                               Text(
                                                 '${qty}x @ ${_formatCurrency(harga)}',
-                                                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: onSurfaceVariant),
+                                                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: c.onSurfaceVariant),
                                               ),
                                             ],
                                           ),
                                         ),
                                         Text(
                                           _formatCurrency(itemTotal),
-                                          style: const TextStyle(fontSize: 14, color: onBackground),
+                                          style: TextStyle(fontSize: 14, color: c.onSurface),
                                         ),
                                       ],
                                     ),
@@ -231,25 +225,25 @@ class StrukPembayaranScreen extends StatelessWidget {
                                 }),
                                 
                                 const SizedBox(height: 12),
-                                const Divider(color: outlineVariant),
+                                Divider(color: c.outlineVariant),
                                 const SizedBox(height: 16),
 
                                 // Totals
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
-                                    const Text('Subtotal', style: TextStyle(fontSize: 14, color: onSurfaceVariant)),
-                                    Text(_formatCurrency(total), style: const TextStyle(fontSize: 14, color: onBackground)),
+                                    Text('Subtotal', style: TextStyle(fontSize: 14, color: c.onSurfaceVariant)),
+                                    Text(_formatCurrency(total), style: TextStyle(fontSize: 14, color: c.onSurface)),
                                   ],
                                 ),
                                 const SizedBox(height: 8),
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
-                                    const Text('TOTAL', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: onBackground)),
+                                    Text('TOTAL', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: c.onSurface)),
                                     Text(
                                       _formatCurrency(total),
-                                      style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: primary),
+                                      style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: c.primary),
                                     ),
                                   ],
                                 ),
@@ -257,16 +251,16 @@ class StrukPembayaranScreen extends StatelessWidget {
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
-                                    const Text('METODE PEMBAYARAN', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: onSurfaceVariant)),
+                                    Text('METODE PEMBAYARAN', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: c.onSurfaceVariant)),
                                     Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                       decoration: BoxDecoration(
-                                        color: secondaryContainer,
+                                        color: c.secondaryContainer,
                                         borderRadius: BorderRadius.circular(4),
                                       ),
                                       child: Text(
                                         metode.toUpperCase(),
-                                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: onSecondaryContainer),
+                                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: c.onSecondaryContainer),
                                       ),
                                     ),
                                   ],
@@ -274,16 +268,16 @@ class StrukPembayaranScreen extends StatelessWidget {
                                 const SizedBox(height: 32),
 
                                 // Footer
-                                const Text(
+                                Text(
                                   'Terima kasih sudah belanja!',
                                   textAlign: TextAlign.center,
-                                  style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic, fontWeight: FontWeight.w600, color: onSurfaceVariant),
+                                  style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic, fontWeight: FontWeight.w600, color: c.onSurfaceVariant),
                                 ),
                                 const SizedBox(height: 4),
-                                const Text(
+                                Text(
                                   'Simpan struk ini sebagai bukti pembayaran sah.',
                                   textAlign: TextAlign.center,
-                                  style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic, fontWeight: FontWeight.w600, color: onSurfaceVariant),
+                                  style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic, fontWeight: FontWeight.w600, color: c.onSurfaceVariant),
                                 ),
                                 const SizedBox(height: 8),
                               ],
@@ -300,7 +294,7 @@ class StrukPembayaranScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEEF6EE),
+                  color: c.surfaceContainerLow,
                   boxShadow: [
                     BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10, offset: const Offset(0, -2)),
                   ],
@@ -310,7 +304,7 @@ class StrukPembayaranScreen extends StatelessWidget {
                     children: [
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: primary,
+                          backgroundColor: c.primary,
                           foregroundColor: Colors.white,
                           minimumSize: const Size(double.infinity, 48),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -328,9 +322,9 @@ class StrukPembayaranScreen extends StatelessWidget {
                       const SizedBox(height: 12),
                       OutlinedButton(
                         style: OutlinedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: onSurfaceVariant,
-                          side: const BorderSide(color: outlineVariant),
+                          backgroundColor: c.cardColor,
+                          foregroundColor: c.onSurfaceVariant,
+                          side: BorderSide(color: c.outlineVariant),
                           minimumSize: const Size(double.infinity, 48),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
@@ -384,10 +378,14 @@ class ZigZagClipper extends CustomClipper<Path> {
 }
 
 class DotPatternPainter extends CustomPainter {
+  final Color color;
+
+  DotPatternPainter({required this.color});
+
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = const Color(0xFF006C49)
+      ..color = color
       ..style = PaintingStyle.fill;
       
     for (double x = 0; x < size.width; x += 24) {

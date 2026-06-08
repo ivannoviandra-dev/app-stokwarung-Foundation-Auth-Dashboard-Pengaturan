@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../data/models/barang_model.dart';
 import '../providers/barang_provider.dart';
 import 'tambah_barang_screen.dart';
@@ -23,9 +24,10 @@ class _ManajemenBarangScreenState extends ConsumerState<ManajemenBarangScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const primaryGreen = Color(0xFF10A87A);
-    const bgColor = Color(0xFFF3FAF6);
-    const greyText = Color(0xFF6B7280);
+    final c = AppColors.of(context);
+    final primaryGreen = c.primaryGreen;
+    final bgColor = c.background;
+    final greyText = c.greyText;
 
     final barangState = ref.watch(barangProvider);
     final barangNotifier = ref.read(barangProvider.notifier);
@@ -42,7 +44,7 @@ class _ManajemenBarangScreenState extends ConsumerState<ManajemenBarangScreen> {
           children: [
             Container(
               padding: const EdgeInsets.all(8),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: primaryGreen,
                 shape: BoxShape.circle,
               ),
@@ -53,7 +55,7 @@ class _ManajemenBarangScreenState extends ConsumerState<ManajemenBarangScreen> {
               ),
             ),
             const SizedBox(width: 12),
-            const Text(
+            Text(
               'Warung Pak Budi',
               style: TextStyle(
                 color: primaryGreen,
@@ -65,7 +67,7 @@ class _ManajemenBarangScreenState extends ConsumerState<ManajemenBarangScreen> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.notifications_none_outlined,
+            icon: Icon(Icons.notifications_none_outlined,
                 color: primaryGreen),
             onPressed: () {},
           ),
@@ -84,19 +86,19 @@ class _ManajemenBarangScreenState extends ConsumerState<ManajemenBarangScreen> {
                   // ─── Search Bar ───────────────────────────────────────
                   Container(
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: c.cardColor,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.grey.shade300),
+                      border: Border.all(color: c.outlineVariant),
                     ),
                     child: TextField(
                       controller: _searchController,
                       onChanged: (value) => barangNotifier.setSearch(value),
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         hintText: 'Cari barang...',
                         hintStyle: TextStyle(color: greyText, fontSize: 14),
                         prefixIcon: Icon(Icons.search, color: greyText),
                         border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(vertical: 14),
+                        contentPadding: const EdgeInsets.symmetric(vertical: 14),
                       ),
                     ),
                   ),
@@ -121,12 +123,12 @@ class _ManajemenBarangScreenState extends ConsumerState<ManajemenBarangScreen> {
                                   horizontal: 16, vertical: 8),
                               decoration: BoxDecoration(
                                 color:
-                                    isSelected ? primaryGreen : Colors.white,
+                                    isSelected ? primaryGreen : c.cardColor,
                                 borderRadius: BorderRadius.circular(20),
                                 border: Border.all(
                                   color: isSelected
                                       ? primaryGreen
-                                      : Colors.grey.shade300,
+                                      : c.outlineVariant,
                                 ),
                               ),
                               child: Text(
@@ -149,7 +151,7 @@ class _ManajemenBarangScreenState extends ConsumerState<ManajemenBarangScreen> {
                   // ─── Result Count ─────────────────────────────────────
                   Text(
                     '${filteredBarang.length} barang ditemukan',
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: greyText,
                       fontSize: 12,
                     ),
@@ -193,8 +195,9 @@ class _ManajemenBarangScreenState extends ConsumerState<ManajemenBarangScreen> {
                       itemBuilder: (context, index) {
                         final barang = filteredBarang[index];
                         return _buildItemCard(
+                          c: c,
                           barang: barang,
-                          onEdit: () => _showEditDialog(context, barang),
+                          onEdit: () => _showEditDialog(context, c, barang),
                         );
                       },
                     ),
@@ -222,7 +225,7 @@ class _ManajemenBarangScreenState extends ConsumerState<ManajemenBarangScreen> {
                       ),
                     );
                   },
-                  child: const Icon(Icons.qr_code_scanner, color: Colors.white),
+                  child: Icon(Icons.qr_code_scanner, color: c.surface),
                 ),
                 const SizedBox(height: 16),
                 FloatingActionButton(
@@ -236,7 +239,7 @@ class _ManajemenBarangScreenState extends ConsumerState<ManajemenBarangScreen> {
                       ),
                     );
                   },
-                  child: const Icon(Icons.add, color: Colors.white),
+                  child: Icon(Icons.add, color: c.surface),
                 ),
               ],
             ),
@@ -248,11 +251,13 @@ class _ManajemenBarangScreenState extends ConsumerState<ManajemenBarangScreen> {
 
   // ─── Item Card Widget ──────────────────────────────────────────────────────
   Widget _buildItemCard({
+    required AppColors c,
     required Barang barang,
     required VoidCallback onEdit,
   }) {
-    const primaryGreen = Color(0xFF10A87A);
-    const darkText = Color(0xFF1F2937);
+    // Use context colors for card
+    final cardColor = c.cardColor;
+    final cardBorderColor = c.cardBorder;
 
     final statusStok = barang.statusStok;
     final Color statusColor;
@@ -261,17 +266,17 @@ class _ManajemenBarangScreenState extends ConsumerState<ManajemenBarangScreen> {
 
     switch (statusStok) {
       case 'kritis':
-        statusColor = Colors.red;
+        statusColor = c.statusCritical;
         statusText = 'Kritis';
         isPulsing = true;
         break;
       case 'rendah':
-        statusColor = Colors.orange;
+        statusColor = c.statusWarning;
         statusText = 'Stok Rendah';
         isPulsing = true;
         break;
       default:
-        statusColor = Colors.green;
+        statusColor = c.statusSuccess;
         statusText = 'Aman';
         isPulsing = false;
     }
@@ -283,10 +288,10 @@ class _ManajemenBarangScreenState extends ConsumerState<ManajemenBarangScreen> {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardColor,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isPulsing ? statusColor.withValues(alpha: 0.5) : Colors.grey.shade200,
+          color: isPulsing ? statusColor.withValues(alpha: 0.5) : cardBorderColor,
         ),
         boxShadow: [
           BoxShadow(
@@ -308,13 +313,13 @@ class _ManajemenBarangScreenState extends ConsumerState<ManajemenBarangScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
-                    color: primaryGreen.withValues(alpha: 0.1),
+                    color: c.primaryGreen.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
                     barang.kategori.toUpperCase(),
-                    style: const TextStyle(
-                      color: primaryGreen,
+                    style: TextStyle(
+                      color: c.primaryGreen,
                       fontSize: 8,
                       fontWeight: FontWeight.bold,
                     ),
@@ -329,12 +334,12 @@ class _ManajemenBarangScreenState extends ConsumerState<ManajemenBarangScreen> {
                 decoration: BoxDecoration(
                   color: isPulsing
                       ? statusColor.withValues(alpha: 0.1)
-                      : Colors.grey.shade100,
+                      : c.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                     color: isPulsing
                         ? statusColor.withValues(alpha: 0.5)
-                        : Colors.grey.shade300,
+                        : c.outlineVariant,
                   ),
                 ),
                 child: Row(
@@ -344,7 +349,7 @@ class _ManajemenBarangScreenState extends ConsumerState<ManajemenBarangScreen> {
                       Icons.inventory_2_outlined,
                       size: 12,
                       color:
-                          isPulsing ? statusColor : Colors.grey.shade600,
+                          isPulsing ? statusColor : c.onSurfaceVariant,
                     ),
                     const SizedBox(width: 4),
                     Text(
@@ -354,7 +359,7 @@ class _ManajemenBarangScreenState extends ConsumerState<ManajemenBarangScreen> {
                         fontWeight: FontWeight.bold,
                         color: isPulsing
                             ? statusColor
-                            : Colors.grey.shade600,
+                            : c.onSurfaceVariant,
                       ),
                     ),
                   ],
@@ -365,8 +370,8 @@ class _ManajemenBarangScreenState extends ConsumerState<ManajemenBarangScreen> {
           const Spacer(),
           Text(
             barang.nama,
-            style: const TextStyle(
-              color: darkText,
+            style: TextStyle(
+              color: c.darkText,
               fontWeight: FontWeight.bold,
               fontSize: 14,
             ),
@@ -376,14 +381,14 @@ class _ManajemenBarangScreenState extends ConsumerState<ManajemenBarangScreen> {
           const SizedBox(height: 4),
           Text(
             hargaFormatted,
-            style: const TextStyle(
-              color: primaryGreen,
+            style: TextStyle(
+              color: c.primaryGreen,
               fontWeight: FontWeight.bold,
               fontSize: 14,
             ),
           ),
           const SizedBox(height: 8),
-          const Divider(height: 1),
+          Divider(height: 1, color: c.outlineVariant),
           const SizedBox(height: 8),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -430,17 +435,17 @@ class _ManajemenBarangScreenState extends ConsumerState<ManajemenBarangScreen> {
                   padding: const EdgeInsets.all(4.0),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
-                    children: const [
+                    children: [
                       Text(
                         'Edit',
                         style: TextStyle(
-                          color: Colors.blue,
+                          color: c.secondary,
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      SizedBox(width: 2),
-                      Icon(Icons.edit, size: 10, color: Colors.blue),
+                      const SizedBox(width: 2),
+                      Icon(Icons.edit, size: 10, color: c.secondary),
                     ],
                   ),
                 ),
@@ -452,121 +457,14 @@ class _ManajemenBarangScreenState extends ConsumerState<ManajemenBarangScreen> {
     );
   }
 
-  // ─── Dialog: Tambah Barang ─────────────────────────────────────────────────
-  void _showTambahDialog(BuildContext context) {
-    final namaCtrl = TextEditingController();
-    final hargaCtrl = TextEditingController();
-    final stokCtrl = TextEditingController();
-    String kategori = 'Sembako';
-    const primaryGreen = Color(0xFF10A87A);
 
-    showDialog(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) => AlertDialog(
-          title: const Text('Tambah Barang Baru'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: namaCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'Nama Barang',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  initialValue: kategori,
-                  decoration: const InputDecoration(
-                    labelText: 'Kategori',
-                    border: OutlineInputBorder(),
-                  ),
-                  items: ['Sembako', 'Makanan', 'Minuman', 'Kebutuhan Rumah']
-                      .map((k) =>
-                          DropdownMenuItem(value: k, child: Text(k)))
-                      .toList(),
-                  onChanged: (val) {
-                    setDialogState(() => kategori = val!);
-                  },
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: hargaCtrl,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'Harga (Rp)',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: stokCtrl,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'Stok Awal',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Batal'),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: primaryGreen),
-              onPressed: () {
-                final nama = namaCtrl.text.trim();
-                final harga = int.tryParse(hargaCtrl.text.trim()) ?? 0;
-                final stok = int.tryParse(stokCtrl.text.trim()) ?? 0;
-
-                if (nama.isEmpty || harga <= 0) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Nama dan harga wajib diisi!'),
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                  return;
-                }
-
-                final newBarang = Barang(
-                  id: DateTime.now().millisecondsSinceEpoch.toString(),
-                  nama: nama,
-                  kategori: kategori,
-                  harga: harga,
-                  stok: stok,
-                );
-                ref.read(barangProvider.notifier).tambahBarang(newBarang);
-                Navigator.pop(ctx);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Barang "$nama" berhasil ditambahkan!'),
-                    behavior: SnackBarBehavior.floating,
-                    backgroundColor: primaryGreen,
-                  ),
-                );
-              },
-              child: const Text('Simpan',
-                  style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   // ─── Dialog: Edit Barang ──────────────────────────────────────────────────
-  void _showEditDialog(BuildContext context, Barang barang) {
+  void _showEditDialog(BuildContext context, AppColors c, Barang barang) {
     final namaCtrl = TextEditingController(text: barang.nama);
     final hargaCtrl = TextEditingController(text: barang.harga.toString());
     final stokCtrl = TextEditingController(text: barang.stok.toString());
     String kategori = barang.kategori;
-    const primaryGreen = Color(0xFF10A87A);
 
     showDialog(
       context: context,
@@ -630,20 +528,20 @@ class _ManajemenBarangScreenState extends ConsumerState<ManajemenBarangScreen> {
                   SnackBar(
                     content: Text('Barang "${barang.nama}" dihapus.'),
                     behavior: SnackBarBehavior.floating,
-                    backgroundColor: Colors.red,
+                    backgroundColor: c.statusCritical,
                   ),
                 );
               },
               child:
-                  const Text('Hapus', style: TextStyle(color: Colors.red)),
+                  Text('Hapus', style: TextStyle(color: c.statusCritical)),
             ),
             const Spacer(),
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('Batal'),
+              child: Text('Batal', style: TextStyle(color: c.onSurfaceVariant)),
             ),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: primaryGreen),
+              style: ElevatedButton.styleFrom(backgroundColor: c.primaryGreen),
               onPressed: () {
                 final nama = namaCtrl.text.trim();
                 final harga = int.tryParse(hargaCtrl.text.trim()) ?? 0;
@@ -671,12 +569,12 @@ class _ManajemenBarangScreenState extends ConsumerState<ManajemenBarangScreen> {
                   SnackBar(
                     content: Text('Barang "$nama" berhasil diperbarui!'),
                     behavior: SnackBarBehavior.floating,
-                    backgroundColor: primaryGreen,
+                    backgroundColor: c.statusSuccess,
                   ),
                 );
               },
-              child: const Text('Simpan',
-                  style: TextStyle(color: Colors.white)),
+              child: Text('Simpan',
+                  style: TextStyle(color: c.surface)),
             ),
           ],
         ),

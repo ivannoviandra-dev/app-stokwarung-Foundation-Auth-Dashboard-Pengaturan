@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/theme/app_colors.dart';
 import 'bayar_utang_screen.dart';
 
 class BukuUtangScreen extends StatefulWidget {
@@ -9,18 +10,27 @@ class BukuUtangScreen extends StatefulWidget {
 }
 
 class _BukuUtangScreenState extends State<BukuUtangScreen> {
-  // Design Colors
-  static const primary = Color(0xFF006C49);
-  static const surfaceContainerLow = Color(0xFFEEF6EE);
-  static const outlineVariant = Color(0xFFBBCABF);
-  static const outline = Color(0xFF6C7A71);
-  static const onSurface = Color(0xFF161D19);
-  static const onSurfaceVariant = Color(0xFF3C4A42);
-  static const statusCritical = Color(0xFFEF4444);
-  static const statusWarning = Color(0xFFF59E0B);
-  static const background = Color(0xFFF4FBF4);
-
   late TextEditingController _searchController;
+  final List<Map<String, dynamic>> _pelanggan = [
+    {
+      'nama': 'Bu Siti',
+      'status': '1 Transaksi belum lunas',
+      'utang': 150000,
+      'inisial': 'S',
+    },
+    {
+      'nama': 'Pak RT',
+      'status': 'Lunas',
+      'utang': 0,
+      'inisial': 'R',
+    },
+    {
+      'nama': 'Mbak Dina',
+      'status': '3 Transaksi belum lunas',
+      'utang': 325000,
+      'inisial': 'D',
+    },
+  ];
 
   @override
   void initState() {
@@ -37,46 +47,35 @@ class _BukuUtangScreenState extends State<BukuUtangScreen> {
     super.dispose();
   }
 
-  final List<Map<String, dynamic>> _pelanggan = [
-    {
-      'nama': 'Bu Siti',
-      'status': '2 Transaksi belum lunas',
-      'statusColor': onSurfaceVariant,
-      'utang': 350000,
-      'inisial': 'S',
-      'bgColor': const Color(0xFF10B981), // primary-container
-      'textColor': const Color(0xFF00422B), // on-primary-container
-    },
-    {
-      'nama': 'Pak RT',
-      'status': '1 Transaksi belum lunas',
-      'statusColor': onSurfaceVariant,
-      'utang': 120000,
-      'inisial': 'R',
-      'bgColor': const Color(0xFF5BB8FE), // secondary-container
-      'textColor': const Color(0xFF00476E), // on-secondary-container
-    },
-    {
-      'nama': 'Mbak Dina',
-      'status': 'Jatuh tempo hari ini',
-      'statusColor': statusWarning,
-      'utang': 50000,
-      'inisial': 'D',
-      'bgColor': const Color(0xFFFC7C78), // tertiary-container
-      'textColor': const Color(0xFF711419), // on-tertiary-container
-    },
-  ];
+  List<Map<String, dynamic>> _filteredPelanggan(AppColors c) {
+    // Inject dynamic colors into the list items here
+    final List<Map<String, dynamic>> pelangganWithColors = _pelanggan.map((p) {
+      final newMap = Map<String, dynamic>.from(p);
+      if (p['nama'] == 'Bu Siti') {
+        newMap['statusColor'] = c.onSurfaceVariant;
+        newMap['bgColor'] = c.primaryContainer;
+        newMap['textColor'] = c.onPrimaryContainer;
+      } else if (p['nama'] == 'Mbak Dina') {
+        newMap['statusColor'] = c.statusWarning;
+        newMap['bgColor'] = c.tertiary;
+        newMap['textColor'] = c.surface;
+      } else {
+        newMap['statusColor'] = c.onSurfaceVariant;
+        newMap['bgColor'] = c.secondaryContainer;
+        newMap['textColor'] = c.onSecondaryContainer;
+      }
+      return newMap;
+    }).toList();
 
-  List<Map<String, dynamic>> get _filteredPelanggan {
-    if (_searchController.text.isEmpty) return _pelanggan;
-    return _pelanggan.where((p) {
+    if (_searchController.text.isEmpty) return pelangganWithColors;
+    return pelangganWithColors.where((p) {
       final nama = (p['nama'] as String).toLowerCase();
       final query = _searchController.text.toLowerCase();
       return nama.contains(query);
     }).toList();
   }
 
-  void _showAddDialog() {
+  void _showAddDialog(AppColors c) {
     final nameController = TextEditingController();
     final amountController = TextEditingController();
 
@@ -84,8 +83,8 @@ class _BukuUtangScreenState extends State<BukuUtangScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          backgroundColor: surfaceContainerLow,
-          title: const Text('Tambah Pelanggan Baru', style: TextStyle(color: onSurface)),
+          backgroundColor: c.surfaceContainerLow,
+          title: Text('Tambah Pelanggan Baru', style: TextStyle(color: c.onSurface)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -111,21 +110,18 @@ class _BukuUtangScreenState extends State<BukuUtangScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Batal', style: TextStyle(color: onSurfaceVariant)),
+              child: Text('Batal', style: TextStyle(color: c.onSurfaceVariant)),
             ),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: primary, foregroundColor: Colors.white),
+              style: ElevatedButton.styleFrom(backgroundColor: c.primary, foregroundColor: Colors.white),
               onPressed: () {
                 if (nameController.text.isNotEmpty) {
                   setState(() {
                     _pelanggan.add({
                       'nama': nameController.text,
                       'status': '1 Transaksi belum lunas',
-                      'statusColor': onSurfaceVariant,
                       'utang': int.tryParse(amountController.text) ?? 0,
                       'inisial': nameController.text[0].toUpperCase(),
-                      'bgColor': const Color(0xFF5BB8FE),
-                      'textColor': const Color(0xFF00476E),
                     });
                   });
                   Navigator.pop(context);
@@ -149,21 +145,24 @@ class _BukuUtangScreenState extends State<BukuUtangScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+    final filteredPelanggan = _filteredPelanggan(c);
+
     return Scaffold(
-      backgroundColor: background,
+      backgroundColor: c.background,
       appBar: AppBar(
-        backgroundColor: background,
+        backgroundColor: c.background,
         elevation: 0,
         scrolledUnderElevation: 0,
         automaticallyImplyLeading: false,
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.storefront, color: primary),
-            SizedBox(width: 8),
+            Icon(Icons.storefront, color: c.primary),
+            const SizedBox(width: 8),
             Text(
               'Warung Pak Budi',
               style: TextStyle(
-                color: primary,
+                color: c.primary,
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
               ),
@@ -172,34 +171,34 @@ class _BukuUtangScreenState extends State<BukuUtangScreen> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.notifications_none, color: onSurfaceVariant),
+            icon: Icon(Icons.notifications_none, color: c.onSurfaceVariant),
             onPressed: () {},
           ),
           const SizedBox(width: 8),
         ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1.0),
-          child: Container(color: outlineVariant, height: 1.0),
+          child: Container(color: c.outlineVariant, height: 1.0),
         ),
       ),
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
           // Header Section
-          const Text(
+          Text(
             'Buku Utang',
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: onSurface,
+              color: c.onSurface,
             ),
           ),
           const SizedBox(height: 4),
-          const Text(
+          Text(
             'Kelola piutang pelanggan dengan mudah.',
             style: TextStyle(
               fontSize: 14,
-              color: onSurfaceVariant,
+              color: c.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: 24),
@@ -208,42 +207,42 @@ class _BukuUtangScreenState extends State<BukuUtangScreen> {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: surfaceContainerLow,
+              color: c.surfaceContainerLow,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: outlineVariant),
+              border: Border.all(color: c.outlineVariant),
             ),
             child: Stack(
               children: [
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Total Piutang',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
-                        color: onSurface,
+                        color: c.onSurface,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       _formatCurrency(_pelanggan.fold<int>(0, (sum, item) => sum + (item['utang'] as int))),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
-                        color: statusCritical,
+                        color: c.statusCritical,
                       ),
                     ),
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        const Icon(Icons.groups, size: 16, color: primary),
+                        Icon(Icons.groups, size: 16, color: c.primary),
                         const SizedBox(width: 4),
                         Text(
                           'Tersebar di ${_pelanggan.where((p) => (p['utang'] as int) > 0).length} pelanggan aktif',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 14,
-                            color: onSurfaceVariant,
+                            color: c.onSurfaceVariant,
                           ),
                         ),
                       ],
@@ -259,21 +258,21 @@ class _BukuUtangScreenState extends State<BukuUtangScreen> {
           Container(
             height: 48,
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: c.cardColor,
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: outlineVariant),
+              border: Border.all(color: c.outlineVariant),
             ),
             child: Row(
               children: [
                 const SizedBox(width: 16),
-                const Icon(Icons.search, color: outline),
+                Icon(Icons.search, color: c.outline),
                 const SizedBox(width: 8),
                 Expanded(
                   child: TextField(
                     controller: _searchController,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       hintText: 'Cari nama pelanggan...',
-                      hintStyle: TextStyle(color: outline, fontSize: 14),
+                      hintStyle: TextStyle(color: c.outline, fontSize: 14),
                       border: InputBorder.none,
                     ),
                   ),
@@ -287,17 +286,17 @@ class _BukuUtangScreenState extends State<BukuUtangScreen> {
           // Debt List
           Container(
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: c.cardColor,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: outlineVariant),
+              border: Border.all(color: c.outlineVariant),
             ),
             child: ListView.separated(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: _filteredPelanggan.length,
-              separatorBuilder: (context, index) => const Divider(height: 1, color: outlineVariant),
+              itemCount: filteredPelanggan.length,
+              separatorBuilder: (context, index) => Divider(height: 1, color: c.outlineVariant),
               itemBuilder: (context, index) {
-                final item = _filteredPelanggan[index];
+                final item = filteredPelanggan[index];
                 return InkWell(
                   onTap: () {
                     Navigator.push(
@@ -338,10 +337,10 @@ class _BukuUtangScreenState extends State<BukuUtangScreen> {
                           children: [
                             Text(
                               item['nama'] as String,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
-                                color: onSurface,
+                                color: c.onSurface,
                               ),
                             ),
                             const SizedBox(height: 2),
@@ -362,10 +361,10 @@ class _BukuUtangScreenState extends State<BukuUtangScreen> {
                         children: [
                           Text(
                             _formatCurrency(item['utang'] as int),
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: statusCritical,
+                              color: c.statusCritical,
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -378,12 +377,12 @@ class _BukuUtangScreenState extends State<BukuUtangScreen> {
                                 ),
                               );
                             },
-                            child: const Text(
+                            child: Text(
                               'Catat Bayar',
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
-                                color: primary,
+                                color: c.primary,
                               ),
                             ),
                           ),
@@ -399,8 +398,8 @@ class _BukuUtangScreenState extends State<BukuUtangScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: _showAddDialog,
-        backgroundColor: primary,
+        onPressed: () => _showAddDialog(c),
+        backgroundColor: c.primary,
         foregroundColor: Colors.white,
         elevation: 4,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),

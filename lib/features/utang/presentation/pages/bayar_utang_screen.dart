@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/theme/app_colors.dart';
 
 class BayarUtangScreen extends StatefulWidget {
   final Map<String, dynamic> pelanggan;
@@ -10,17 +11,6 @@ class BayarUtangScreen extends StatefulWidget {
 }
 
 class _BayarUtangScreenState extends State<BayarUtangScreen> {
-  // Design Colors
-  static const primary = Color(0xFF006C49);
-  static const primaryContainer = Color(0xFF10B981);
-  static const surfaceContainerLowest = Color(0xFFFFFFFF);
-  static const surfaceContainerLow = Color(0xFFEEF6EE);
-  static const outlineVariant = Color(0xFFBBCABF);
-  static const onSurface = Color(0xFF161D19);
-  static const onSurfaceVariant = Color(0xFF3C4A42);
-  static const statusCritical = Color(0xFFEF4444);
-  static const background = Color(0xFFF4FBF4);
-  
   late TextEditingController _amountController;
   late int _totalUtang;
   int _jumlahBayar = 0;
@@ -61,36 +51,37 @@ class _BayarUtangScreenState extends State<BayarUtangScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final c = AppColors.of(context);
     final int sisaUtang = (_totalUtang - _jumlahBayar) < 0 ? 0 : (_totalUtang - _jumlahBayar);
 
     return Scaffold(
-      backgroundColor: background,
+      backgroundColor: c.background,
       appBar: AppBar(
-        backgroundColor: background,
+        backgroundColor: c.background,
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: primary),
+          icon: Icon(Icons.arrow_back, color: c.primary),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: Text(
           'Bayar Utang',
           style: TextStyle(
-            color: primary,
+            color: c.primary,
             fontSize: 20,
             fontWeight: FontWeight.bold,
           ),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.help_outline, color: primary),
+            icon: Icon(Icons.help_outline, color: c.primary),
             onPressed: () {},
           ),
           const SizedBox(width: 8),
         ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1.0),
-          child: Container(color: outlineVariant, height: 1.0),
+          child: Container(color: c.outlineVariant, height: 1.0),
         ),
       ),
       body: Stack(
@@ -102,9 +93,9 @@ class _BayarUtangScreenState extends State<BayarUtangScreen> {
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: surfaceContainerLow,
+                  color: c.surfaceContainerLow,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: outlineVariant),
+                  border: Border.all(color: c.outlineVariant),
                 ),
                 child: Column(
                   children: [
@@ -134,18 +125,18 @@ class _BayarUtangScreenState extends State<BayarUtangScreen> {
                             children: [
                               Text(
                                 widget.pelanggan['nama'] as String,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
-                                  color: onSurface,
+                                  color: c.onSurface,
                                 ),
                               ),
                               const SizedBox(height: 2),
-                              const Text(
+                              Text(
                                 'Pelanggan Setia',
                                 style: TextStyle(
                                   fontSize: 14,
-                                  color: onSurfaceVariant,
+                                  color: c.onSurfaceVariant,
                                 ),
                               ),
                             ],
@@ -154,7 +145,7 @@ class _BayarUtangScreenState extends State<BayarUtangScreen> {
                       ],
                     ),
                     const SizedBox(height: 24),
-                    const Divider(color: outlineVariant),
+                    Divider(color: c.outlineVariant),
                     const SizedBox(height: 16),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -163,21 +154,21 @@ class _BayarUtangScreenState extends State<BayarUtangScreen> {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
+                            Text(
                               'TOTAL UTANG SAAT INI',
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
-                                color: onSurfaceVariant,
+                                color: c.onSurfaceVariant,
                               ),
                             ),
                             const SizedBox(height: 4),
                             Text(
                               _formatCurrency(_totalUtang),
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 28,
                                 fontWeight: FontWeight.bold,
-                                color: statusCritical,
+                                color: c.statusCritical,
                               ),
                             ),
                           ],
@@ -185,15 +176,15 @@ class _BayarUtangScreenState extends State<BayarUtangScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
-                            color: statusCritical.withValues(alpha: 0.1),
+                            color: c.statusCritical.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(4),
                           ),
-                          child: const Text(
+                          child: Text(
                             'Belum Lunas',
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
-                              color: statusCritical,
+                              color: c.statusCritical,
                             ),
                           ),
                         ),
@@ -205,32 +196,32 @@ class _BayarUtangScreenState extends State<BayarUtangScreen> {
               const SizedBox(height: 24),
 
               // Input Section
-              const Text(
+              Text(
                 'JUMLAH BAYAR',
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
-                  color: onSurfaceVariant,
+                  color: c.onSurfaceVariant,
                 ),
               ),
               const SizedBox(height: 8),
               Container(
                 height: 64,
                 decoration: BoxDecoration(
-                  color: surfaceContainerLowest,
+                  color: c.cardColor,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: outlineVariant, width: 2),
+                  border: Border.all(color: c.outlineVariant, width: 2),
                 ),
                 child: Row(
                   children: [
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16.0),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
                       child: Text(
                         'Rp',
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
-                          color: onSurface,
+                          color: c.onSurface,
                         ),
                       ),
                     ),
@@ -238,10 +229,10 @@ class _BayarUtangScreenState extends State<BayarUtangScreen> {
                       child: TextField(
                         controller: _amountController,
                         keyboardType: TextInputType.number,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
-                          color: onSurface,
+                          color: c.onSurface,
                         ),
                         decoration: const InputDecoration(
                           hintText: '0',
@@ -260,24 +251,24 @@ class _BayarUtangScreenState extends State<BayarUtangScreen> {
                 scrollDirection: Axis.horizontal,
                 child: Row(
                   children: [
-                    _buildChip('Bayar Lunas', () => _setAmount(_totalUtang), isPrimary: true),
+                    _buildChip(context, 'Bayar Lunas', () => _setAmount(_totalUtang), isPrimary: true),
                     const SizedBox(width: 8),
-                    _buildChip('Rp50.000', () => _setAmount(50000)),
+                    _buildChip(context, 'Rp50.000', () => _setAmount(50000)),
                     const SizedBox(width: 8),
-                    _buildChip('Rp100.000', () => _setAmount(100000)),
+                    _buildChip(context, 'Rp100.000', () => _setAmount(100000)),
                     const SizedBox(width: 8),
-                    _buildChip('Rp200.000', () => _setAmount(200000)),
+                    _buildChip(context, 'Rp200.000', () => _setAmount(200000)),
                   ],
                 ),
               ),
               const SizedBox(height: 24),
 
-              const Text(
+              Text(
                 'KETERANGAN (OPSIONAL)',
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
-                  color: onSurfaceVariant,
+                  color: c.onSurfaceVariant,
                 ),
               ),
               const SizedBox(height: 8),
@@ -286,18 +277,18 @@ class _BayarUtangScreenState extends State<BayarUtangScreen> {
                 decoration: InputDecoration(
                   hintText: 'Contoh: Bayar cicilan pertama',
                   filled: true,
-                  fillColor: surfaceContainerLowest,
+                  fillColor: c.cardColor,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: outlineVariant),
+                    borderSide: BorderSide(color: c.outlineVariant),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: outlineVariant),
+                    borderSide: BorderSide(color: c.outlineVariant),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: primary),
+                    borderSide: BorderSide(color: c.primary),
                   ),
                 ),
               ),
@@ -307,9 +298,9 @@ class _BayarUtangScreenState extends State<BayarUtangScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFDDE4DD).withValues(alpha: 0.3), // surface-container-highest / 30
+                  color: c.surfaceContainerHighest.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: outlineVariant, style: BorderStyle.solid), // Should be dashed, but we'll use solid to simplify
+                  border: Border.all(color: c.outlineVariant, style: BorderStyle.solid), // Should be dashed, but we'll use solid to simplify
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -317,11 +308,11 @@ class _BayarUtangScreenState extends State<BayarUtangScreen> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           'Sisa Utang Nantinya',
                           style: TextStyle(
                             fontSize: 14,
-                            color: onSurfaceVariant,
+                            color: c.onSurfaceVariant,
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -330,35 +321,35 @@ class _BayarUtangScreenState extends State<BayarUtangScreen> {
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
-                            color: sisaUtang == 0 && _jumlahBayar > 0 ? const Color(0xFF10B981) : onSurface,
+                            color: sisaUtang == 0 && _jumlahBayar > 0 ? c.primaryContainer : c.onSurface,
                           ),
                         ),
                       ],
                     ),
-                    const Icon(Icons.calculate, color: outlineVariant),
+                    Icon(Icons.calculate, color: c.outlineVariant),
                   ],
                 ),
               ),
               const SizedBox(height: 24),
 
               // Metode Pembayaran
-              const Text(
+              Text(
                 'METODE PEMBAYARAN',
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
-                  color: onSurfaceVariant,
+                  color: c.onSurfaceVariant,
                 ),
               ),
               const SizedBox(height: 8),
               Row(
                 children: [
                   Expanded(
-                    child: _buildMetodeCard('Tunai', Icons.payments),
+                    child: _buildMetodeCard(context, 'Tunai', Icons.payments),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
-                    child: _buildMetodeCard('QRIS', Icons.qr_code_2),
+                    child: _buildMetodeCard(context, 'QRIS', Icons.qr_code_2),
                   ),
                 ],
               ),
@@ -377,15 +368,15 @@ class _BayarUtangScreenState extends State<BayarUtangScreen> {
                   begin: Alignment.bottomCenter,
                   end: Alignment.topCenter,
                   colors: [
-                    background,
-                    background.withValues(alpha: 0.9),
-                    background.withValues(alpha: 0),
+                    c.background,
+                    c.background.withValues(alpha: 0.9),
+                    c.background.withValues(alpha: 0),
                   ],
                 ),
               ),
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: primary,
+                  backgroundColor: c.primary,
                   foregroundColor: Colors.white,
                   minimumSize: const Size(double.infinity, 48),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -421,14 +412,15 @@ class _BayarUtangScreenState extends State<BayarUtangScreen> {
     );
   }
 
-  Widget _buildChip(String label, VoidCallback onTap, {bool isPrimary = false}) {
+  Widget _buildChip(BuildContext context, String label, VoidCallback onTap, {bool isPrimary = false}) {
+    final c = AppColors.of(context);
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(24),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isPrimary ? const Color(0xFF10B981) : const Color(0xFFE3EAE3),
+          color: isPrimary ? c.primaryContainer : c.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(24),
         ),
         child: Text(
@@ -436,14 +428,15 @@ class _BayarUtangScreenState extends State<BayarUtangScreen> {
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.bold,
-            color: isPrimary ? const Color(0xFF00422B) : const Color(0xFF3C4A42),
+            color: isPrimary ? c.onPrimaryContainer : c.onSurfaceVariant,
           ),
         ),
       ),
     );
   }
 
-  Widget _buildMetodeCard(String label, IconData icon) {
+  Widget _buildMetodeCard(BuildContext context, String label, IconData icon) {
+    final c = AppColors.of(context);
     final isSelected = _metode == label;
     
     return InkWell(
@@ -456,10 +449,10 @@ class _BayarUtangScreenState extends State<BayarUtangScreen> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF10B981).withValues(alpha: 0.1) : surfaceContainerLowest,
+          color: isSelected ? c.primaryContainer.withValues(alpha: 0.1) : c.cardColor,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? primary : outlineVariant,
+            color: isSelected ? c.primary : c.outlineVariant,
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -467,7 +460,7 @@ class _BayarUtangScreenState extends State<BayarUtangScreen> {
           children: [
             Icon(
               icon,
-              color: isSelected ? primary : onSurfaceVariant,
+              color: isSelected ? c.primary : c.onSurfaceVariant,
               size: 28,
             ),
             const SizedBox(height: 4),
@@ -476,7 +469,7 @@ class _BayarUtangScreenState extends State<BayarUtangScreen> {
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
-                color: isSelected ? primary : onSurfaceVariant,
+                color: isSelected ? c.primary : c.onSurfaceVariant,
               ),
             ),
           ],

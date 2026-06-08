@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/routes/app_router.dart';
+import 'features/pengaturan/presentation/providers/settings_provider.dart';
 
 void main() {
   runApp(
@@ -10,18 +11,47 @@ void main() {
   );
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends ConsumerWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isDarkMode = ref.watch(settingsProvider.select((s) => s.darkMode));
+
+    const seedColor = Color(0xFF10A87A);
+
+    final lightTheme = ThemeData(
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: seedColor,
+        brightness: Brightness.light,
+      ),
+      useMaterial3: true,
+      scaffoldBackgroundColor: const Color(0xFFF4FBF4),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Color(0xFFF4FBF4),
+        foregroundColor: Color(0xFF161D19),
+      ),
+    );
+
+    final darkTheme = ThemeData(
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: seedColor,
+        brightness: Brightness.dark,
+      ),
+      useMaterial3: true,
+      scaffoldBackgroundColor: const Color(0xFF161D19),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Color(0xFF1E2B22),
+        foregroundColor: Color(0xFFE3EAE3),
+      ),
+    );
+
     return MaterialApp.router(
       title: 'StokWarung',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF10A87A)),
-        useMaterial3: true,
-      ),
+      theme: lightTheme,
+      darkTheme: darkTheme,
+      themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
       routerConfig: appRouter,
     );
   }

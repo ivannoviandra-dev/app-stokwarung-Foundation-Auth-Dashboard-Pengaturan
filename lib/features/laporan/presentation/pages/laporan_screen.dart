@@ -1,67 +1,39 @@
 import 'package:flutter/material.dart';
+import '../../../../core/theme/app_colors.dart';
 
 class LaporanScreen extends StatelessWidget {
   const LaporanScreen({super.key});
 
-  static const surface = Color(0xFFF4FBF4);
-  static const onSurface = Color(0xFF161D19);
-  static const primary = Color(0xFF006C49);
-  static const primaryContainer = Color(0xFF10B981);
-  static const onPrimaryContainer = Color(0xFF00422B);
-  static const primaryFixed = Color(0xFF6FFBBE);
-  static const onPrimaryFixedVariant = Color(0xFF005236);
-  static const outlineVariant = Color(0xFFBBCABF);
-  static const outline = Color(0xFF6C7A71);
-  static const surfaceContainerLowest = Color(0xFFFFFFFF);
-  static const surfaceContainerHigh = Color(0xFFE3EAE3);
-  static const surfaceContainerLow = Color(0xFFEEF6EE);
-  static const onSurfaceVariant = Color(0xFF3C4A42);
-  static const statusSuccess = Color(0xFF10B981);
-  static const profitGold = Color(0xFFD4AF37);
-
   @override
   Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+
     return Scaffold(
-      backgroundColor: surface,
+      backgroundColor: c.surface,
       appBar: AppBar(
-        backgroundColor: surface,
+        backgroundColor: c.surface,
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
         leading: IconButton(
-          icon: const Icon(Icons.menu, color: primary),
+          icon: Icon(Icons.menu, color: c.primary),
           onPressed: () {},
         ),
-        title: const Text(
+        title: Text(
           'Laporan',
-          style: TextStyle(
-            color: primary,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(color: c.primary, fontSize: 20, fontWeight: FontWeight.bold),
         ),
         actions: [
           Container(
             margin: const EdgeInsets.only(right: 16),
-            width: 32,
-            height: 32,
-            decoration: const BoxDecoration(
-              color: primaryContainer,
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.account_circle,
-              color: onPrimaryContainer,
-              size: 20,
-            ),
+            width: 32, height: 32,
+            decoration: BoxDecoration(color: c.primaryContainer, shape: BoxShape.circle),
+            child: Icon(Icons.account_circle, color: c.onPrimaryContainer, size: 20),
           ),
         ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1.0),
-          child: Container(
-            color: outlineVariant,
-            height: 1.0,
-          ),
+          child: Container(color: c.outlineVariant, height: 1.0),
         ),
       ),
       body: SingleChildScrollView(
@@ -72,14 +44,10 @@ class LaporanScreen extends StatelessWidget {
             // Profit Summary Card
             Container(
               decoration: BoxDecoration(
-                color: primary,
+                color: c.primary,
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
+                  BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10, offset: const Offset(0, 4)),
                 ],
               ),
               child: ClipRRect(
@@ -87,13 +55,11 @@ class LaporanScreen extends StatelessWidget {
                 child: Stack(
                   children: [
                     Positioned(
-                      right: -32,
-                      top: -32,
+                      right: -32, top: -32,
                       child: Container(
-                        width: 128,
-                        height: 128,
+                        width: 128, height: 128,
                         decoration: BoxDecoration(
-                          color: primaryContainer.withValues(alpha: 0.2),
+                          color: c.primaryContainer.withValues(alpha: 0.2),
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -103,53 +69,29 @@ class LaporanScreen extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
+                          Text(
                             'LABA BERSIH BULAN INI',
-                            style: TextStyle(
-                              color: primaryFixed,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 1.2,
-                            ),
+                            style: TextStyle(color: c.primaryFixed, fontSize: 12, fontWeight: FontWeight.w600, letterSpacing: 1.2),
                           ),
                           const SizedBox(height: 4),
                           Row(
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
-                              const Text(
-                                'Rp 12.500.000',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 28,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
+                              const Text('Rp 12.500.000', style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
                               const SizedBox(width: 8),
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: onPrimaryFixedVariant,
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                child: const Row(
-                                  children: [
-                                    Icon(Icons.arrow_upward, color: primaryFixed, size: 14),
-                                    SizedBox(width: 2),
-                                    Text(
-                                      '12%',
-                                      style: TextStyle(
-                                        color: primaryFixed,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                                decoration: BoxDecoration(color: c.onPrimaryFixedVariant, borderRadius: BorderRadius.circular(16)),
+                                child: Row(children: [
+                                  Icon(Icons.arrow_upward, color: c.primaryFixed, size: 14),
+                                  const SizedBox(width: 2),
+                                  Text('12%', style: TextStyle(color: c.primaryFixed, fontSize: 12, fontWeight: FontWeight.bold)),
+                                ]),
                               ),
                             ],
                           ),
                           const SizedBox(height: 16),
-                          const Divider(color: onPrimaryFixedVariant),
+                          Divider(color: c.onPrimaryFixedVariant),
                           const SizedBox(height: 16),
                           Row(
                             children: [
@@ -157,23 +99,9 @@ class LaporanScreen extends StatelessWidget {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
-                                      'Total Penjualan',
-                                      style: TextStyle(
-                                        color: primaryFixed.withValues(alpha: 0.8),
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
+                                    Text('Total Penjualan', style: TextStyle(color: c.primaryFixed.withValues(alpha: 0.8), fontSize: 12, fontWeight: FontWeight.w600)),
                                     const SizedBox(height: 4),
-                                    const Text(
-                                      'Rp 45.200.000',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
+                                    const Text('Rp 45.200.000', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600)),
                                   ],
                                 ),
                               ),
@@ -181,23 +109,9 @@ class LaporanScreen extends StatelessWidget {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
-                                      'Total Modal',
-                                      style: TextStyle(
-                                        color: primaryFixed.withValues(alpha: 0.8),
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
+                                    Text('Total Modal', style: TextStyle(color: c.primaryFixed.withValues(alpha: 0.8), fontSize: 12, fontWeight: FontWeight.w600)),
                                     const SizedBox(height: 4),
-                                    const Text(
-                                      'Rp 32.700.000',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
+                                    const Text('Rp 32.700.000', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600)),
                                   ],
                                 ),
                               ),
@@ -216,24 +130,17 @@ class LaporanScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: surfaceContainerLowest,
+                color: c.surfaceContainerLowest,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: outlineVariant),
+                border: Border.all(color: c.outlineVariant),
               ),
               child: Column(
                 children: [
-                  const Row(
+                  Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        'Tren 7 Hari Terakhir',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                          color: onSurface,
-                        ),
-                      ),
-                      Icon(Icons.insights, color: outline),
+                      Text('Tren 7 Hari Terakhir', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: c.onSurface)),
+                      Icon(Icons.insights, color: c.outline),
                     ],
                   ),
                   const SizedBox(height: 24),
@@ -243,13 +150,13 @@ class LaporanScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.end,
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        _buildBar('Sen', 0.6, false),
-                        _buildBar('Sel', 0.45, false),
-                        _buildBar('Rab', 0.85, false),
-                        _buildBar('Kam', 0.7, false),
-                        _buildBar('Jum', 1.0, true),
-                        _buildBar('Sab', 0.4, false),
-                        _buildBar('Min', 0.55, false),
+                        _buildBar(context, 'Sen', 0.6, false),
+                        _buildBar(context, 'Sel', 0.45, false),
+                        _buildBar(context, 'Rab', 0.85, false),
+                        _buildBar(context, 'Kam', 0.7, false),
+                        _buildBar(context, 'Jum', 1.0, true),
+                        _buildBar(context, 'Sab', 0.4, false),
+                        _buildBar(context, 'Min', 0.55, false),
                       ],
                     ),
                   ),
@@ -259,62 +166,41 @@ class LaporanScreen extends StatelessWidget {
             const SizedBox(height: 24),
 
             // Best Sellers
-            Row(
-              children: [
-                const Icon(Icons.stars, color: profitGold),
-                const SizedBox(width: 8),
-                const Text(
-                  'Barang Terlaris',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: onSurface),
-                ),
-              ],
-            ),
+            Row(children: [
+              Icon(Icons.stars, color: c.profitGold),
+              const SizedBox(width: 8),
+              Text('Barang Terlaris', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: c.onSurface)),
+            ]),
             const SizedBox(height: 12),
-            _buildItemRankRow('Mie Instan Goreng', '1.240 Terjual', '+18%', true, 'https://images.unsplash.com/photo-1612929633738-8fe44f7ec841?q=80&w=200&auto=format&fit=crop'),
+            _buildItemRankRow(context, 'Mie Instan Goreng', '1.240 Terjual', '+18%', true),
             const SizedBox(height: 12),
-            _buildItemRankRow('Telur Ayam Ras', '850 Terjual', '+5%', true, 'https://images.unsplash.com/photo-1506976785307-8732e854ad03?q=80&w=200&auto=format&fit=crop'),
+            _buildItemRankRow(context, 'Telur Ayam Ras', '850 Terjual', '+5%', true),
             const SizedBox(height: 24),
 
             // High Margin
-            Row(
-              children: [
-                const Icon(Icons.trending_up, color: primary),
-                const SizedBox(width: 8),
-                const Text(
-                  'Margin Tertinggi',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: onSurface),
-                ),
-              ],
-            ),
+            Row(children: [
+              Icon(Icons.trending_up, color: c.primary),
+              const SizedBox(width: 8),
+              Text('Margin Tertinggi', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: c.onSurface)),
+            ]),
             const SizedBox(height: 12),
-            _buildMarginRow('Kopi Sachet Mix', 'Margin 45%', 'Rp 1.500', 'https://images.unsplash.com/photo-1559525839-b184a4d698c7?q=80&w=200&auto=format&fit=crop'),
+            _buildMarginRow(context, 'Kopi Sachet Mix', 'Margin 45%', 'Rp 1.500'),
             const SizedBox(height: 12),
-            _buildMarginRow('Kerupuk Kaleng', 'Margin 40%', 'Rp 2.000', 'https://images.unsplash.com/photo-1599490659213-e2b9527bd087?q=80&w=200&auto=format&fit=crop'),
+            _buildMarginRow(context, 'Kerupuk Kaleng', 'Margin 40%', 'Rp 2.000'),
             const SizedBox(height: 32),
 
             // Download Button
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: primary,
-                foregroundColor: Colors.white,
+                backgroundColor: c.primary, foregroundColor: Colors.white,
                 minimumSize: const Size(double.infinity, 48),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                elevation: 4,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), elevation: 4,
               ),
               onPressed: () {},
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.picture_as_pdf),
-                  SizedBox(width: 8),
-                  Text(
-                    'Unduh Laporan PDF',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
+              child: const Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                Icon(Icons.picture_as_pdf), SizedBox(width: 8),
+                Text('Unduh Laporan PDF', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              ]),
             ),
             const SizedBox(height: 32),
           ],
@@ -323,7 +209,8 @@ class LaporanScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildBar(String label, double heightRatio, bool isHighest) {
+  Widget _buildBar(BuildContext context, String label, double heightRatio, bool isHighest) {
+    final c = AppColors.of(context);
     return Expanded(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.end,
@@ -334,128 +221,82 @@ class LaporanScreen extends StatelessWidget {
               child: Container(
                 margin: const EdgeInsets.symmetric(horizontal: 4),
                 decoration: BoxDecoration(
-                  color: isHighest ? primaryContainer : surfaceContainerHigh,
+                  color: isHighest ? c.primaryContainer : c.surfaceContainerHigh,
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
                 ),
               ),
             ),
           ),
           const SizedBox(height: 8),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: isHighest ? FontWeight.bold : FontWeight.w600,
-              color: isHighest ? primary : outline,
-            ),
-          ),
+          Text(label, style: TextStyle(fontSize: 10, fontWeight: isHighest ? FontWeight.bold : FontWeight.w600, color: isHighest ? c.primary : c.outline)),
         ],
       ),
     );
   }
 
-  Widget _buildItemRankRow(String title, String subtitle, String trailing, bool isPositive, String imageUrl) {
+  Widget _buildItemRankRow(BuildContext context, String title, String subtitle, String trailing, bool isPositive) {
+    final c = AppColors.of(context);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: surfaceContainerLowest,
+        color: c.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: outlineVariant),
+        border: Border.all(color: c.outlineVariant),
       ),
       child: Row(
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Image.network(
-              imageUrl,
-              width: 40,
-              height: 40,
-              fit: BoxFit.cover,
-            ),
+          Container(
+            width: 40, height: 40,
+            decoration: BoxDecoration(color: c.surfaceContainerHigh, borderRadius: BorderRadius.circular(8)),
+            child: Icon(Icons.inventory_2, color: c.primary, size: 20),
           ),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: onSurface),
-                ),
-                Text(
-                  subtitle,
-                  style: const TextStyle(fontSize: 14, color: onSurfaceVariant),
-                ),
+                Text(title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: c.onSurface)),
+                Text(subtitle, style: TextStyle(fontSize: 14, color: c.onSurfaceVariant)),
               ],
             ),
           ),
-          Text(
-            trailing,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: isPositive ? statusSuccess : outline,
-            ),
-          ),
+          Text(trailing, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: isPositive ? c.statusSuccess : c.outline)),
         ],
       ),
     );
   }
 
-  Widget _buildMarginRow(String title, String subtitle, String price, String imageUrl) {
+  Widget _buildMarginRow(BuildContext context, String title, String subtitle, String price) {
+    final c = AppColors.of(context);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: surfaceContainerLow,
+        color: c.surfaceContainerLow,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: primary.withValues(alpha: 0.1)),
+        border: Border.all(color: c.primary.withValues(alpha: 0.1)),
       ),
       child: Row(
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Image.network(
-              imageUrl,
-              width: 40,
-              height: 40,
-              fit: BoxFit.cover,
-            ),
+          Container(
+            width: 40, height: 40,
+            decoration: BoxDecoration(color: c.surfaceContainerHigh, borderRadius: BorderRadius.circular(8)),
+            child: Icon(Icons.local_cafe, color: c.primary, size: 20),
           ),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: onSurface),
-                ),
-                Text(
-                  subtitle,
-                  style: const TextStyle(fontSize: 14, color: onSurfaceVariant),
-                ),
+                Text(title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: c.onSurface)),
+                Text(subtitle, style: TextStyle(fontSize: 14, color: c.onSurfaceVariant)),
               ],
             ),
           ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text(
-                price,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: primary,
-                ),
-              ),
-              const Text(
-                '/ pcs',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: outline,
-                ),
-              ),
+              Text(price, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: c.primary)),
+              Text('/ pcs', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: c.outline)),
             ],
           ),
         ],
