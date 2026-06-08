@@ -36,6 +36,10 @@ class StrukPembayaranScreen extends StatelessWidget {
         elevation: 0,
         scrolledUnderElevation: 0,
         automaticallyImplyLeading: false,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: c.primary),
+          onPressed: () => Navigator.pop(context),
+        ),
         title: Row(
           children: [
             Icon(Icons.storefront, color: c.primary),
@@ -309,7 +313,16 @@ class StrukPembayaranScreen extends StatelessWidget {
                           minimumSize: const Size(double.infinity, 48),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
-                        onPressed: () {},
+                        onPressed: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: const Text('🖨️ Struk berhasil dicetak!'),
+                              backgroundColor: c.primary,
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                            ),
+                          );
+                        },
                         child: const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [

@@ -15,6 +15,7 @@ class _BayarUtangScreenState extends State<BayarUtangScreen> {
   late int _totalUtang;
   int _jumlahBayar = 0;
   String _metode = 'Tunai';
+  String? _selectedChip;
 
   @override
   void initState() {
@@ -23,8 +24,19 @@ class _BayarUtangScreenState extends State<BayarUtangScreen> {
     _amountController = TextEditingController();
     _amountController.addListener(() {
       final text = _amountController.text.replaceAll(RegExp(r'[^0-9]'), '');
+      final parsed = int.tryParse(text) ?? 0;
       setState(() {
-        _jumlahBayar = int.tryParse(text) ?? 0;
+        _jumlahBayar = parsed;
+        // Clear chip selection when user manually edits
+        if (_selectedChip == 'lunas' && parsed != _totalUtang) {
+          _selectedChip = null;
+        } else if (_selectedChip == '50000' && parsed != 50000) {
+          _selectedChip = null;
+        } else if (_selectedChip == '100000' && parsed != 100000) {
+          _selectedChip = null;
+        } else if (_selectedChip == '200000' && parsed != 200000) {
+          _selectedChip = null;
+        }
       });
     });
   }
@@ -43,9 +55,11 @@ class _BayarUtangScreenState extends State<BayarUtangScreen> {
     return 'Rp$str';
   }
 
-  void _setAmount(int amount) {
+  void _setAmount(int amount, String chipKey) {
+    setState(() {
+      _selectedChip = chipKey;
+    });
     _amountController.text = amount.toString();
-    // Move cursor to end
     _amountController.selection = TextSelection.fromPosition(TextPosition(offset: _amountController.text.length));
   }
 
@@ -251,13 +265,13 @@ class _BayarUtangScreenState extends State<BayarUtangScreen> {
                 scrollDirection: Axis.horizontal,
                 child: Row(
                   children: [
-                    _buildChip(context, 'Bayar Lunas', () => _setAmount(_totalUtang), isPrimary: true),
+                    _buildChip(context, 'Bayar Lunas', () => _setAmount(_totalUtang, 'lunas'), chipKey: 'lunas'),
                     const SizedBox(width: 8),
-                    _buildChip(context, 'Rp50.000', () => _setAmount(50000)),
+                    _buildChip(context, 'Rp50.000', () => _setAmount(50000, '50000'), chipKey: '50000'),
                     const SizedBox(width: 8),
-                    _buildChip(context, 'Rp100.000', () => _setAmount(100000)),
+                    _buildChip(context, 'Rp100.000', () => _setAmount(100000, '100000'), chipKey: '100000'),
                     const SizedBox(width: 8),
-                    _buildChip(context, 'Rp200.000', () => _setAmount(200000)),
+                    _buildChip(context, 'Rp200.000', () => _setAmount(200000, '200000'), chipKey: '200000'),
                   ],
                 ),
               ),
@@ -412,23 +426,26 @@ class _BayarUtangScreenState extends State<BayarUtangScreen> {
     );
   }
 
-  Widget _buildChip(BuildContext context, String label, VoidCallback onTap, {bool isPrimary = false}) {
+  Widget _buildChip(BuildContext context, String label, VoidCallback onTap, {required String chipKey}) {
     final c = AppColors.of(context);
+    final isSelected = _selectedChip == chipKey;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(24),
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isPrimary ? c.primaryContainer : c.surfaceContainerHighest,
+          color: isSelected ? c.primaryContainer : c.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(24),
+          border: isSelected ? Border.all(color: c.primary, width: 1.5) : null,
         ),
         child: Text(
           label,
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.bold,
-            color: isPrimary ? c.onPrimaryContainer : c.onSurfaceVariant,
+            color: isSelected ? c.onPrimaryContainer : c.onSurfaceVariant,
           ),
         ),
       ),
