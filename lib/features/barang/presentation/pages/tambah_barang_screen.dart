@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../data/models/barang_model.dart';
 import '../providers/barang_provider.dart';
 
@@ -21,19 +22,6 @@ class _TambahBarangScreenState extends ConsumerState<TambahBarangScreen> {
 
   String? _kategori;
   String? _satuan;
-
-  // Colors based on the design
-  static const primary = Color(0xFF006C49);
-  static const surface = Color(0xFFF4FBF4);
-  static const outlineVariant = Color(0xFFBBCABF);
-  static const neutralSurface = Color(0xFFF8FAFC);
-  static const onSurface = Color(0xFF161D19);
-  static const onSurfaceVariant = Color(0xFF3C4A42);
-  static const statusSuccess = Color(0xFF10B981);
-  static const statusCritical = Color(0xFFEF4444);
-  static const primaryContainer = Color(0xFF10B981);
-
-  @override
   void dispose() {
     _namaController.dispose();
     _barcodeController.dispose();
@@ -66,7 +54,7 @@ class _TambahBarangScreenState extends ConsumerState<TambahBarangScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Barang "$nama" berhasil ditambahkan!'),
-          backgroundColor: statusSuccess,
+          backgroundColor: AppColors.of(context).statusSuccess,
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -74,7 +62,7 @@ class _TambahBarangScreenState extends ConsumerState<TambahBarangScreen> {
     }
   }
 
-  Widget _buildSectionHeader(IconData icon, String title, Color iconColor) {
+  Widget _buildSectionHeader(AppColors c, IconData icon, String title, Color iconColor) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0),
       child: Row(
@@ -83,10 +71,10 @@ class _TambahBarangScreenState extends ConsumerState<TambahBarangScreen> {
           const SizedBox(width: 8),
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
-              color: onSurface,
+              color: c.onSurface,
             ),
           ),
         ],
@@ -94,7 +82,8 @@ class _TambahBarangScreenState extends ConsumerState<TambahBarangScreen> {
     );
   }
 
-  Widget _buildTextField({
+  Widget _buildTextField(
+    AppColors c, {
     required String label,
     required TextEditingController controller,
     String? hintText,
@@ -109,10 +98,10 @@ class _TambahBarangScreenState extends ConsumerState<TambahBarangScreen> {
       children: [
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w600,
-            color: onSurfaceVariant,
+            color: c.onSurfaceVariant,
             letterSpacing: 0.05,
           ),
         ),
@@ -121,32 +110,32 @@ class _TambahBarangScreenState extends ConsumerState<TambahBarangScreen> {
           controller: controller,
           keyboardType: keyboardType,
           validator: validator,
-          style: const TextStyle(fontSize: 16, color: onSurface),
+          style: TextStyle(fontSize: 16, color: c.onSurface),
           decoration: InputDecoration(
             hintText: hintText,
             filled: true,
-            fillColor: neutralSurface,
+            fillColor: c.neutralSurface,
             prefixIcon: prefixIcon,
             suffixIcon: suffixIcon,
             helperText: helperText,
-            helperStyle: const TextStyle(
+            helperStyle: TextStyle(
               fontSize: 10,
-              color: onSurfaceVariant,
+              color: c.onSurfaceVariant,
               fontStyle: FontStyle.italic,
             ),
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: outlineVariant),
+              borderSide: BorderSide(color: c.outlineVariant),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: outlineVariant),
+              borderSide: BorderSide(color: c.outlineVariant),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: primary, width: 2),
+              borderSide: BorderSide(color: c.primary, width: 2),
             ),
           ),
         ),
@@ -154,7 +143,8 @@ class _TambahBarangScreenState extends ConsumerState<TambahBarangScreen> {
     );
   }
 
-  Widget _buildDropdown({
+  Widget _buildDropdown(
+    AppColors c, {
     required String label,
     required String? value,
     required List<String> items,
@@ -165,10 +155,10 @@ class _TambahBarangScreenState extends ConsumerState<TambahBarangScreen> {
       children: [
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w600,
-            color: onSurfaceVariant,
+            color: c.onSurfaceVariant,
             letterSpacing: 0.05,
           ),
         ),
@@ -179,23 +169,23 @@ class _TambahBarangScreenState extends ConsumerState<TambahBarangScreen> {
           items: items
               .map((e) => DropdownMenuItem(value: e, child: Text(e)))
               .toList(),
-          style: const TextStyle(fontSize: 14, color: onSurface),
+          style: TextStyle(fontSize: 14, color: c.onSurface),
           decoration: InputDecoration(
             filled: true,
-            fillColor: neutralSurface,
+            fillColor: c.neutralSurface,
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: outlineVariant),
+              borderSide: BorderSide(color: c.outlineVariant),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: outlineVariant),
+              borderSide: BorderSide(color: c.outlineVariant),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: primary, width: 2),
+              borderSide: BorderSide(color: c.primary, width: 2),
             ),
           ),
         ),
@@ -205,6 +195,8 @@ class _TambahBarangScreenState extends ConsumerState<TambahBarangScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+
     String formatCurrency(int amount) {
       final str = amount.toString().replaceAllMapped(
         RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
@@ -214,27 +206,27 @@ class _TambahBarangScreenState extends ConsumerState<TambahBarangScreen> {
     }
 
     return Scaffold(
-      backgroundColor: surface,
+      backgroundColor: c.surface,
       appBar: AppBar(
-        backgroundColor: surface,
+        backgroundColor: c.surface,
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: primary),
+          icon: Icon(Icons.arrow_back, color: c.primary),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: Text(
           'Tambah Barang',
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
-            color: onSurface,
+            color: c.onSurface,
           ),
         ),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1.0),
           child: Container(
-            color: outlineVariant,
+            color: c.outlineVariant,
             height: 1.0,
           ),
         ),
@@ -247,13 +239,13 @@ class _TambahBarangScreenState extends ConsumerState<TambahBarangScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // ─── Informasi Dasar ──────────────────────────────────────────
-              _buildSectionHeader(Icons.inventory_2, 'Informasi Dasar', primary),
+              _buildSectionHeader(c, Icons.inventory_2, 'Informasi Dasar', c.primary),
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: c.cardColor,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: outlineVariant),
+                  border: Border.all(color: c.outlineVariant),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.05),
@@ -266,6 +258,7 @@ class _TambahBarangScreenState extends ConsumerState<TambahBarangScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildTextField(
+                      c,
                       label: 'Nama Barang',
                       controller: _namaController,
                       hintText: 'Contoh: Beras Pandan Wangi 5kg',
@@ -275,11 +268,12 @@ class _TambahBarangScreenState extends ConsumerState<TambahBarangScreen> {
                     ),
                     const SizedBox(height: 16),
                     _buildTextField(
+                      c,
                       label: 'Barcode / Kode SKU',
                       controller: _barcodeController,
                       hintText: 'Scan atau ketik kode',
                       suffixIcon: IconButton(
-                        icon: const Icon(Icons.qr_code_scanner, color: primary),
+                        icon: Icon(Icons.qr_code_scanner, color: c.primary),
                         onPressed: () {},
                       ),
                     ),
@@ -288,6 +282,7 @@ class _TambahBarangScreenState extends ConsumerState<TambahBarangScreen> {
                       children: [
                         Expanded(
                           child: _buildDropdown(
+                            c,
                             label: 'Kategori',
                             value: _kategori,
                             items: [
@@ -304,6 +299,7 @@ class _TambahBarangScreenState extends ConsumerState<TambahBarangScreen> {
                         const SizedBox(width: 16),
                         Expanded(
                           child: _buildDropdown(
+                            c,
                             label: 'Satuan',
                             value: _satuan,
                             items: ['pcs', 'kg', 'liter', 'dus', 'pak'],
@@ -318,13 +314,13 @@ class _TambahBarangScreenState extends ConsumerState<TambahBarangScreen> {
               const SizedBox(height: 24),
 
               // ─── Atur Harga ───────────────────────────────────────────────
-              _buildSectionHeader(Icons.payments, 'Atur Harga', const Color(0xFF006398)), // Secondary color
+              _buildSectionHeader(c, Icons.payments, 'Atur Harga', c.secondary), // Secondary color
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: c.cardColor,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: outlineVariant),
+                  border: Border.all(color: c.outlineVariant),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.05),
@@ -339,12 +335,13 @@ class _TambahBarangScreenState extends ConsumerState<TambahBarangScreen> {
                       children: [
                         Expanded(
                           child: _buildTextField(
+                            c,
                             label: 'Harga Beli',
                             controller: _hargaBeliController,
                             hintText: '0',
                             keyboardType: TextInputType.number,
-                            prefixIcon: const Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 12.0),
+                            prefixIcon: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 12.0),
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
@@ -352,7 +349,7 @@ class _TambahBarangScreenState extends ConsumerState<TambahBarangScreen> {
                                     'Rp',
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
-                                      color: onSurfaceVariant,
+                                      color: c.onSurfaceVariant,
                                     ),
                                   ),
                                 ],
@@ -363,12 +360,13 @@ class _TambahBarangScreenState extends ConsumerState<TambahBarangScreen> {
                         const SizedBox(width: 16),
                         Expanded(
                           child: _buildTextField(
+                            c,
                             label: 'Harga Jual',
                             controller: _hargaJualController,
                             hintText: '0',
                             keyboardType: TextInputType.number,
-                            prefixIcon: const Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 12.0),
+                            prefixIcon: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 12.0),
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
@@ -376,7 +374,7 @@ class _TambahBarangScreenState extends ConsumerState<TambahBarangScreen> {
                                     'Rp',
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
-                                      color: onSurfaceVariant,
+                                      color: c.onSurfaceVariant,
                                     ),
                                   ),
                                 ],
@@ -393,17 +391,17 @@ class _TambahBarangScreenState extends ConsumerState<TambahBarangScreen> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFEEF6EE), // surface-container-low
+                        color: c.surfaceContainerLow,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text(
+                          Text(
                             'Estimasi Margin Laba:',
                             style: TextStyle(
                               fontSize: 12,
-                              color: onSurfaceVariant,
+                              color: c.onSurfaceVariant,
                             ),
                           ),
                           AnimatedBuilder(
@@ -418,13 +416,13 @@ class _TambahBarangScreenState extends ConsumerState<TambahBarangScreen> {
                                   0;
                               int currentMargin = jual - beli;
                               
-                              Color marginColor = onSurfaceVariant;
+                              Color marginColor = c.onSurfaceVariant;
                               String prefix = '';
                               if (currentMargin > 0) {
-                                marginColor = statusSuccess;
+                                marginColor = c.statusSuccess;
                                 prefix = '+';
                               } else if (currentMargin < 0) {
-                                marginColor = statusCritical;
+                                marginColor = c.statusCritical;
                                 prefix = '-';
                               }
 
@@ -447,13 +445,13 @@ class _TambahBarangScreenState extends ConsumerState<TambahBarangScreen> {
               const SizedBox(height: 24),
 
               // ─── Stok & Inventaris ────────────────────────────────────────
-              _buildSectionHeader(Icons.analytics, 'Stok & Inventaris', const Color(0xFFA43A3A)), // Tertiary color
+              _buildSectionHeader(c, Icons.analytics, 'Stok & Inventaris', c.tertiary), // Tertiary color
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: c.cardColor,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: outlineVariant),
+                  border: Border.all(color: c.outlineVariant),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.05),
@@ -469,6 +467,7 @@ class _TambahBarangScreenState extends ConsumerState<TambahBarangScreen> {
                       children: [
                         Expanded(
                           child: _buildTextField(
+                            c,
                             label: 'Stok Awal',
                             controller: _stokAwalController,
                             hintText: '0',
@@ -478,6 +477,7 @@ class _TambahBarangScreenState extends ConsumerState<TambahBarangScreen> {
                         const SizedBox(width: 16),
                         Expanded(
                           child: _buildTextField(
+                            c,
                             label: 'Stok Minimum',
                             controller: _stokMinController,
                             hintText: '5',
@@ -492,12 +492,12 @@ class _TambahBarangScreenState extends ConsumerState<TambahBarangScreen> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           'Tanggal Kedaluwarsa (Opsional)',
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
-                            color: onSurfaceVariant,
+                            color: c.onSurfaceVariant,
                             letterSpacing: 0.05,
                           ),
                         ),
@@ -516,14 +516,14 @@ class _TambahBarangScreenState extends ConsumerState<TambahBarangScreen> {
                             height: 48,
                             padding: const EdgeInsets.symmetric(horizontal: 16),
                             decoration: BoxDecoration(
-                              color: neutralSurface,
+                              color: c.neutralSurface,
                               borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: outlineVariant),
+                              border: Border.all(color: c.outlineVariant),
                             ),
                             alignment: Alignment.centerLeft,
-                            child: const Text(
+                            child: Text(
                               'dd/mm/yyyy',
-                              style: TextStyle(color: onSurfaceVariant),
+                              style: TextStyle(color: c.onSurfaceVariant),
                             ),
                           ),
                         ),
@@ -538,9 +538,9 @@ class _TambahBarangScreenState extends ConsumerState<TambahBarangScreen> {
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: primaryContainer,
+                  color: c.primaryContainer,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: primary.withValues(alpha: 0.2)),
+                  border: Border.all(color: c.primary.withValues(alpha: 0.2)),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -549,12 +549,12 @@ class _TambahBarangScreenState extends ConsumerState<TambahBarangScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
+                          Text(
                             'Optimalkan Bisnis Anda',
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                              color: c.onPrimaryContainer,
                               height: 1.2,
                             ),
                           ),
@@ -563,7 +563,7 @@ class _TambahBarangScreenState extends ConsumerState<TambahBarangScreen> {
                             'Sistem akan otomatis memberikan laporan laba rugi untuk setiap barang yang Anda simpan.',
                             style: TextStyle(
                               fontSize: 12,
-                              color: Colors.white.withValues(alpha: 0.9),
+                              color: c.onPrimaryContainer.withValues(alpha: 0.9),
                             ),
                           ),
                         ],
@@ -572,7 +572,7 @@ class _TambahBarangScreenState extends ConsumerState<TambahBarangScreen> {
                     Icon(
                       Icons.trending_up,
                       size: 48,
-                      color: Colors.white.withValues(alpha: 0.2),
+                      color: c.onPrimaryContainer.withValues(alpha: 0.2),
                     ),
                   ],
                 ),
@@ -585,8 +585,8 @@ class _TambahBarangScreenState extends ConsumerState<TambahBarangScreen> {
       bottomNavigationBar: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: surface,
-          border: const Border(top: BorderSide(color: outlineVariant)),
+          color: c.surface,
+          border: Border(top: BorderSide(color: c.outlineVariant)),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.05),
@@ -597,7 +597,7 @@ class _TambahBarangScreenState extends ConsumerState<TambahBarangScreen> {
         ),
         child: ElevatedButton(
           style: ElevatedButton.styleFrom(
-            backgroundColor: primary,
+            backgroundColor: c.primary,
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 14),
             shape: RoundedRectangleBorder(
