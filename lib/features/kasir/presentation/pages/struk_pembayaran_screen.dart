@@ -337,7 +337,7 @@ class StrukPembayaranScreen extends StatelessWidget {
                         onPressed: () {
                           Navigator.pop(context); // Go back to kasir
                         },
-                        child: const Text('Selesai', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+                        child: const Text('Transaksi Baru', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
                       ),
                     ],
                   ),
