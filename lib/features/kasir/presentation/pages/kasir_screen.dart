@@ -10,6 +10,14 @@ class KasirScreen extends ConsumerStatefulWidget {
 }
 
 class _KasirScreenState extends ConsumerState<KasirScreen> {
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
   // Design Colors
   static const neutralSurface = Color(0xFFF8FAFC);
   static const surface = Color(0xFFF4FBF4);
@@ -141,14 +149,32 @@ class _KasirScreenState extends ConsumerState<KasirScreen> {
                     padding: EdgeInsets.symmetric(horizontal: 12.0),
                     child: Icon(Icons.search, color: outline),
                   ),
-                  const Expanded(
+                  Expanded(
                     child: TextField(
-                      decoration: InputDecoration(
-                        hintText: 'Cari barang atau scan barcode...',
+                      controller: _searchController,
+                      decoration: const InputDecoration(
+                        hintText: 'Ketik nama barang lalu enter...',
                         hintStyle: TextStyle(color: outline, fontSize: 14),
                         border: InputBorder.none,
                       ),
-                      style: TextStyle(color: onSurface, fontSize: 16),
+                      style: const TextStyle(color: onSurface, fontSize: 16),
+                      onSubmitted: (value) {
+                        if (value.trim().isNotEmpty) {
+                          setState(() {
+                            final index = _keranjang.indexWhere((item) => item['nama'].toString().toLowerCase() == value.trim().toLowerCase());
+                            if (index >= 0) {
+                              _keranjang[index]['qty'] += 1;
+                            } else {
+                              _keranjang.add({
+                                'nama': value.trim(),
+                                'harga': 10000,
+                                'qty': 1,
+                              });
+                            }
+                          });
+                          _searchController.clear();
+                        }
+                      },
                     ),
                   ),
                   Container(
@@ -167,7 +193,20 @@ class _KasirScreenState extends ConsumerState<KasirScreen> {
                           topRight: Radius.circular(8),
                           bottomRight: Radius.circular(8),
                         ),
-                        onTap: () {},
+                        onTap: () {
+                          setState(() {
+                            final index = _keranjang.indexWhere((item) => item['nama'] == 'Barang Scan QR');
+                            if (index >= 0) {
+                              _keranjang[index]['qty'] += 1;
+                            } else {
+                              _keranjang.add({
+                                'nama': 'Barang Scan QR',
+                                'harga': 15000,
+                                'qty': 1,
+                              });
+                            }
+                          });
+                        },
                         child: const Icon(Icons.qr_code_scanner, color: primary),
                       ),
                     ),
@@ -250,10 +289,38 @@ class _KasirScreenState extends ConsumerState<KasirScreen> {
                         ],
                       ),
                       child: _keranjang.isEmpty
-                          ? const Center(
-                              child: Text(
-                                'Keranjang masih kosong',
-                                style: TextStyle(color: outline, fontSize: 16),
+                          ? Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(Icons.shopping_cart_checkout, size: 64, color: outlineVariant),
+                                  const SizedBox(height: 16),
+                                  const Text(
+                                    'Keranjang masih kosong',
+                                    style: TextStyle(color: outline, fontSize: 16),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  ElevatedButton.icon(
+                                    onPressed: () {
+                                      setState(() {
+                                        _keranjang.add({
+                                          'nama': 'Barang Manual',
+                                          'harga': 12000,
+                                          'qty': 1,
+                                        });
+                                      });
+                                    },
+                                    icon: const Icon(Icons.add),
+                                    label: const Text('Tambah Barang'),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: primary,
+                                      foregroundColor: Colors.white,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             )
                           : ListView.separated(
