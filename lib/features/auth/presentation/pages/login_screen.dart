@@ -179,7 +179,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Email atau Username',
+                              _isOwnerSelected ? 'Email' : 'Username / ID Kasir',
                               style: TextStyle(
                                 color: darkText,
                                 fontSize: 13,
@@ -191,7 +191,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               controller: _emailController,
                               decoration: InputDecoration(
                                 prefixIcon: Icon(Icons.person_outline, color: greyText),
-                                hintText: 'nama@warung.com',
+                                hintText: _isOwnerSelected ? 'nama@warung.com' : 'kasir01',
                                 hintStyle: TextStyle(color: greyText, fontSize: 14),
                                 filled: true,
                                 fillColor: c.surfaceContainerHighest,
@@ -213,7 +213,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             const SizedBox(height: 20),
 
                             Text(
-                              'Password',
+                              _isOwnerSelected ? 'Password' : 'PIN / Password',
                               style: TextStyle(
                                 color: darkText,
                                 fontSize: 13,
@@ -296,11 +296,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                                 .login(
                                                   _emailController.text,
                                                   _passwordController.text,
+                                                  _isOwnerSelected ? 'owner' : 'kasir',
                                                 );
                                                 
                                             if (success) {
                                               if (context.mounted) {
-                                                context.go('/dashboard_owner');
+                                                if (_isOwnerSelected) {
+                                                  context.go('/dashboard_owner');
+                                                } else {
+                                                  context.go('/dashboard_kasir');
+                                                }
                                               }
                                             } else if (ref.read(authProvider).error != null) {
                                               if (context.mounted) {

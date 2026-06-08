@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/auth/presentation/pages/login_screen.dart';
 import '../../features/dashboard/presentation/pages/dashboard_owner_screen.dart';
+import '../../features/dashboard/presentation/pages/dashboard_kasir_screen.dart';
 import '../../features/reminder/presentation/pages/notifications_screen.dart';
 import '../../features/utang/presentation/pages/buku_utang_screen.dart';
 import '../../features/barang/presentation/pages/manajemen_barang_screen.dart';
@@ -18,6 +18,10 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/login',
       builder: (context, state) => const LoginScreen(),
+    ),
+    GoRoute(
+      path: '/dashboard_kasir',
+      builder: (context, state) => const DashboardKasirScreen(),
     ),
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) {
