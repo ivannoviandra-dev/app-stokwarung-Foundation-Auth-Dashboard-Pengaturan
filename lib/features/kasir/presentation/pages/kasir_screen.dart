@@ -1,0 +1,387 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/theme/app_colors.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'struk_pembayaran_screen.dart';
+
+class KasirScreen extends ConsumerStatefulWidget {
+  const KasirScreen({super.key});
+
+  @override
+  ConsumerState<KasirScreen> createState() => _KasirScreenState();
+}
+
+class _KasirScreenState extends ConsumerState<KasirScreen> {
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  final List<Map<String, dynamic>> _keranjang = [];
+
+  String _formatCurrency(int amount) {
+    final str = amount.toString().replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+      (Match m) => '${m[1]}.',
+    );
+    return 'Rp$str';
+  }
+
+  void _prosesPembayaran(String metode) {
+    if (_keranjang.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Keranjang kosong!')),
+      );
+      return;
+    }
+    final keranjangCopy = List<Map<String, dynamic>>.from(
+        _keranjang.map((e) => Map<String, dynamic>.from(e)));
+    final total = _totalPrice;
+    setState(() => _keranjang.clear());
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => StrukPembayaranScreen(
+          keranjang: keranjangCopy, total: total, metode: metode,
+        ),
+      ),
+    );
+  }
+
+  void _updateQty(int index, int delta) {
+    setState(() {
+      _keranjang[index]['qty'] += delta;
+      if (_keranjang[index]['qty'] <= 0) _keranjang.removeAt(index);
+    });
+  }
+
+  int get _totalPrice =>
+      _keranjang.fold(0, (s, i) => s + ((i['harga'] as int) * (i['qty'] as int)));
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+    final userMetadata = Supabase.instance.client.auth.currentUser?.userMetadata;
+    final namaToko = userMetadata?['nama_toko'] as String? ?? 'Warung Saya';
+
+    return Scaffold(
+      backgroundColor: c.neutralSurface,
+      appBar: AppBar(
+        backgroundColor: c.surface,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        centerTitle: true,
+        leading: IconButton(
+          icon: Icon(Icons.storefront, color: c.onSurface),
+          onPressed: () {},
+        ),
+        title: Text(
+          namaToko,
+          style: TextStyle(color: c.primary, fontSize: 20, fontWeight: FontWeight.bold),
+        ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.notifications_none, color: c.onSurface),
+            onPressed: () {},
+          ),
+          const SizedBox(width: 8),
+        ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1.0),
+          child: Container(color: c.outlineVariant, height: 1.0),
+        ),
+      ),
+      body: Column(
+        children: [
+          // Search / Scan Area
+          Container(
+            color: c.surface,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Container(
+              height: 48,
+              decoration: BoxDecoration(
+                color: c.surfaceContainerLow,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: c.outlineVariant),
+              ),
+              child: Row(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                    child: Icon(Icons.search, color: c.outline),
+                  ),
+                  Expanded(
+                    child: TextField(
+                      controller: _searchController,
+                      decoration: InputDecoration(
+                        hintText: 'Ketik nama barang lalu enter...',
+                        hintStyle: TextStyle(color: c.outline, fontSize: 14),
+                        border: InputBorder.none,
+                      ),
+                      style: TextStyle(color: c.onSurface, fontSize: 16),
+                      onSubmitted: (value) {
+                        if (value.trim().isNotEmpty) {
+                          setState(() {
+                            final index = _keranjang.indexWhere((item) =>
+                                item['nama'].toString().toLowerCase() ==
+                                    value.trim().toLowerCase());
+                            if (index >= 0) {
+                              _keranjang[index]['qty'] += 1;
+                            } else {
+                              _keranjang.add({'nama': value.trim(), 'harga': 10000, 'qty': 1});
+                            }
+                          });
+                          _searchController.clear();
+                        }
+                      },
+                    ),
+                  ),
+                  Container(
+                    width: 48, height: 48,
+                    decoration: const BoxDecoration(
+                      borderRadius: BorderRadius.only(
+                        topRight: Radius.circular(8), bottomRight: Radius.circular(8),
+                      ),
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        borderRadius: const BorderRadius.only(
+                          topRight: Radius.circular(8), bottomRight: Radius.circular(8),
+                        ),
+                        onTap: () {
+                          setState(() {
+                            final index = _keranjang.indexWhere((item) => item['nama'] == 'Barang Scan QR');
+                            if (index >= 0) {
+                              _keranjang[index]['qty'] += 1;
+                            } else {
+                              _keranjang.add({'nama': 'Barang Scan QR', 'harga': 15000, 'qty': 1});
+                            }
+                          });
+                        },
+                        child: Icon(Icons.qr_code_scanner, color: c.primary),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // Keranjang List
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      RichText(
+                        text: TextSpan(
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: c.onSurface),
+                          children: [
+                            const TextSpan(text: 'Keranjang '),
+                            TextSpan(
+                              text: '(${_keranjang.length} item)',
+                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.normal, color: c.outline),
+                            ),
+                          ],
+                        ),
+                      ),
+                      InkWell(
+                        onTap: () => setState(() => _keranjang.clear()),
+                        child: Row(
+                          children: [
+                            Icon(Icons.delete_outline, size: 16, color: c.tertiary),
+                            const SizedBox(width: 4),
+                            Text('Kosongkan', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: c.tertiary)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: c.surface,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: c.surfaceContainerHighest),
+                        boxShadow: [
+                          BoxShadow(color: Colors.black.withValues(alpha: 0.05), offset: const Offset(0, 2), blurRadius: 4),
+                        ],
+                      ),
+                      child: _keranjang.isEmpty
+                          ? Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.shopping_cart_checkout, size: 64, color: c.outlineVariant),
+                                  const SizedBox(height: 16),
+                                  Text('Keranjang masih kosong', style: TextStyle(color: c.outline, fontSize: 16)),
+                                  const SizedBox(height: 16),
+                                  ElevatedButton.icon(
+                                    onPressed: () {
+                                      setState(() {
+                                        _keranjang.add({'nama': 'Barang Manual', 'harga': 12000, 'qty': 1});
+                                      });
+                                    },
+                                    icon: const Icon(Icons.add),
+                                    label: const Text('Tambah Barang'),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: c.primary,
+                                      foregroundColor: Colors.white,
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                          : ListView.separated(
+                              itemCount: _keranjang.length,
+                              separatorBuilder: (_, __) => Divider(height: 1, color: c.surfaceContainerHighest),
+                              itemBuilder: (context, index) {
+                                final item = _keranjang[index];
+                                final harga = item['harga'] as int;
+                                final qty = item['qty'] as int;
+                                final total = harga * qty;
+
+                                return Padding(
+                                  padding: const EdgeInsets.all(16.0),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(item['nama'], style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: c.onSurface)),
+                                            const SizedBox(height: 4),
+                                            Row(children: [
+                                              Text(_formatCurrency(harga), style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: c.onSurface)),
+                                              const SizedBox(width: 4),
+                                              Text('/ pcs', style: TextStyle(fontSize: 14, color: c.outline)),
+                                            ]),
+                                          ],
+                                        ),
+                                      ),
+                                      Column(
+                                        crossAxisAlignment: CrossAxisAlignment.end,
+                                        children: [
+                                          Text(_formatCurrency(total), style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: c.primary)),
+                                          const SizedBox(height: 8),
+                                          Container(
+                                            height: 36,
+                                            decoration: BoxDecoration(
+                                              color: c.cardColor,
+                                              borderRadius: BorderRadius.circular(8),
+                                              border: Border.all(color: c.outlineVariant),
+                                            ),
+                                            child: Row(
+                                              children: [
+                                                InkWell(
+                                                  onTap: () => _updateQty(index, -1),
+                                                  borderRadius: const BorderRadius.horizontal(left: Radius.circular(8)),
+                                                  child: SizedBox(width: 36, child: Center(child: Icon(Icons.remove, size: 20, color: c.onSurfaceVariant))),
+                                                ),
+                                                SizedBox(
+                                                  width: 36,
+                                                  child: Center(child: Text('$qty', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: c.onSurface))),
+                                                ),
+                                                InkWell(
+                                                  onTap: () => _updateQty(index, 1),
+                                                  borderRadius: const BorderRadius.horizontal(right: Radius.circular(8)),
+                                                  child: SizedBox(width: 36, child: Center(child: Icon(Icons.add, size: 20, color: c.onSurfaceVariant))),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+      bottomNavigationBar: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: c.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+          border: Border(top: BorderSide(color: c.surfaceContainerHighest)),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withValues(alpha: 0.05), offset: const Offset(0, -4), blurRadius: 12),
+          ],
+        ),
+        child: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Total', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: c.onSurfaceVariant)),
+                  Text(_formatCurrency(_totalPrice), style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: c.primary)),
+                ],
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: c.primary, foregroundColor: Colors.white,
+                  minimumSize: const Size(double.infinity, 48),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)), elevation: 1,
+                ),
+                onPressed: () => _prosesPembayaran('Tunai'),
+                child: const Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  Icon(Icons.payments), SizedBox(width: 8),
+                  Text('Bayar Tunai', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                ]),
+              ),
+              const SizedBox(height: 8),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: c.secondaryContainer, foregroundColor: c.onSecondaryContainer,
+                  minimumSize: const Size(double.infinity, 48),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)), elevation: 1,
+                ),
+                onPressed: () => _prosesPembayaran('QRIS'),
+                child: const Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  Icon(Icons.qr_code_2), SizedBox(width: 8),
+                  Text('Bayar QRIS', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                ]),
+              ),
+              const SizedBox(height: 8),
+              OutlinedButton(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: c.secondary, side: BorderSide(color: c.secondary, width: 2),
+                  minimumSize: const Size(double.infinity, 48),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+                onPressed: () {},
+                child: const Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  Icon(Icons.menu_book), SizedBox(width: 8),
+                  Text('Catat Utang', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                ]),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
