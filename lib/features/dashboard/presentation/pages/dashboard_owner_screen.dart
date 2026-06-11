@@ -65,18 +65,31 @@ class DashboardOwnerScreen extends ConsumerWidget {
                 icon: Icon(Icons.notifications_none_outlined, color: c.primaryGreen),
                 onPressed: () => context.push('/notifications'),
               ),
-              Positioned(
-                right: 12,
-                top: 12,
-                child: Container(
-                  width: 8,
-                  height: 8,
-                  decoration: const BoxDecoration(
-                    color: Colors.red,
-                    shape: BoxShape.circle,
+              if (dashboardData.totalNotifikasi > 0)
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 16,
+                      minHeight: 16,
+                    ),
+                    child: Text(
+                      '${dashboardData.totalNotifikasi}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
                   ),
                 ),
-              ),
             ],
           ),
           const SizedBox(width: 16),
@@ -398,7 +411,7 @@ class DashboardOwnerScreen extends ConsumerWidget {
 
               // Attention Items List
               ...dashboardData.perluPerhatian.map((item) {
-                final isKritis = item.type == 'kritis';
+                final isKritis = item.type == 'stok_kritis' || item.type == 'kadaluarsa_kritis';
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 12.0),
                   child: _buildAttentionItem(

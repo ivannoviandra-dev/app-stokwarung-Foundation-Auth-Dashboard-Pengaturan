@@ -77,177 +77,161 @@ class _ManajemenBarangScreenState extends ConsumerState<ManajemenBarangScreen> {
           const SizedBox(width: 16),
         ],
       ),
-      body: Stack(
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          SingleChildScrollView(
-            child: Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // ─── Search Bar ───────────────────────────────────────
-                  Container(
-                    decoration: BoxDecoration(
-                      color: c.cardColor,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: c.outlineVariant),
-                    ),
-                    child: TextField(
-                      controller: _searchController,
-                      onChanged: (value) => barangNotifier.setSearch(value),
-                      decoration: InputDecoration(
-                        hintText: 'Cari barang...',
-                        hintStyle: TextStyle(color: greyText, fontSize: 14),
-                        prefixIcon: Icon(Icons.search, color: greyText),
-                        border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(vertical: 14),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // ─── Category Filters ─────────────────────────────────
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: List.generate(daftarKategori.length, (index) {
-                        final kategori = daftarKategori[index];
-                        final isSelected =
-                            kategori == barangState.selectedKategori;
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 8.0),
-                          child: InkWell(
-                            onTap: () => barangNotifier.setKategori(kategori),
-                            borderRadius: BorderRadius.circular(20),
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 8),
-                              decoration: BoxDecoration(
-                                color:
-                                    isSelected ? primaryGreen : c.cardColor,
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(
-                                  color: isSelected
-                                      ? primaryGreen
-                                      : c.outlineVariant,
-                                ),
-                              ),
-                              child: Text(
-                                kategori,
-                                style: TextStyle(
-                                  color:
-                                      isSelected ? Colors.white : greyText,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ),
-                        );
-                      }),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // ─── Result Count ─────────────────────────────────────
-                  Text(
-                    '${filteredBarang.length} barang ditemukan',
-                    style: TextStyle(
-                      color: greyText,
-                      fontSize: 12,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-
-                  // ─── Inventory Grid ───────────────────────────────────
-                  if (filteredBarang.isEmpty)
-                    SizedBox(
-                      height: MediaQuery.of(context).size.height * 0.45,
-                      child: Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.search_off,
-                                size: 48, color: Colors.grey.shade400),
-                            const SizedBox(height: 12),
-                            Text(
-                              'Tidak ada barang ditemukan',
-                              style: TextStyle(
-                                color: Colors.grey.shade500,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    )
-                  else
-                    GridView.builder(
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        mainAxisSpacing: 16,
-                        crossAxisSpacing: 16,
-                        childAspectRatio: 0.80,
-                      ),
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: filteredBarang.length,
-                      itemBuilder: (context, index) {
-                        final barang = filteredBarang[index];
-                        return _buildItemCard(
-                          c: c,
-                          barang: barang,
-                          onEdit: () => _showEditDialog(context, c, barang),
-                        );
-                      },
-                    ),
-                  const SizedBox(height: 80),
-                ],
-              ),
-            ),
+          FloatingActionButton(
+            heroTag: 'scan_fab',
+            backgroundColor: primaryGreen,
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Fitur Scan Barcode (Segera Hadir)'),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            },
+            child: Icon(Icons.qr_code_scanner, color: c.surface),
           ),
-
-          // ─── Floating Action Buttons ──────────────────────────────────
-          Positioned(
-            right: 24,
-            bottom: 10,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                FloatingActionButton(
-                  heroTag: 'scan_fab',
-                  backgroundColor: primaryGreen,
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Fitur Scan Barcode (Segera Hadir)'),
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
-                  },
-                  child: Icon(Icons.qr_code_scanner, color: c.surface),
+          const SizedBox(height: 16),
+          FloatingActionButton(
+            heroTag: 'add_fab',
+            backgroundColor: primaryGreen,
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const TambahBarangScreen(),
                 ),
-                const SizedBox(height: 16),
-                FloatingActionButton(
-                  heroTag: 'add_fab',
-                  backgroundColor: primaryGreen,
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const TambahBarangScreen(),
-                      ),
-                    );
-                  },
-                  child: Icon(Icons.add, color: c.surface),
-                ),
-              ],
-            ),
+              );
+            },
+            child: Icon(Icons.add, color: c.surface),
           ),
         ],
+      ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding:
+              const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ─── Search Bar ───────────────────────────────────────
+              Container(
+                decoration: BoxDecoration(
+                  color: c.cardColor,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: c.outlineVariant),
+                ),
+                child: TextField(
+                  controller: _searchController,
+                  onChanged: (value) => barangNotifier.setSearch(value),
+                  decoration: InputDecoration(
+                    hintText: 'Cari barang...',
+                    hintStyle: TextStyle(color: greyText, fontSize: 14),
+                    prefixIcon: Icon(Icons.search, color: greyText),
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // ─── Category Filters ─────────────────────────────────
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: List.generate(daftarKategori.length, (index) {
+                    final kategori = daftarKategori[index];
+                    final isSelected =
+                        kategori == barangState.selectedKategori;
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 8.0),
+                      child: InkWell(
+                        onTap: () => barangNotifier.setKategori(kategori),
+                        borderRadius: BorderRadius.circular(20),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                            color:
+                                isSelected ? primaryGreen : c.cardColor,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: isSelected
+                                  ? primaryGreen
+                                  : c.outlineVariant,
+                            ),
+                          ),
+                          child: Text(
+                            kategori,
+                            style: TextStyle(
+                              color:
+                                  isSelected ? Colors.white : greyText,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  }),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // ─── Result Count ─────────────────────────────────────
+              Text(
+                '${filteredBarang.length} barang ditemukan',
+                style: TextStyle(
+                  color: greyText,
+                  fontSize: 12,
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // ─── Inventory List ───────────────────────────────────
+              if (filteredBarang.isEmpty)
+                SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.45,
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.search_off,
+                            size: 48, color: Colors.grey.shade400),
+                        const SizedBox(height: 12),
+                        Text(
+                          'Tidak ada barang ditemukan',
+                          style: TextStyle(
+                            color: Colors.grey.shade500,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              else
+                ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: filteredBarang.length,
+                  separatorBuilder: (context, index) => Divider(height: 1, color: c.outlineVariant),
+                  itemBuilder: (context, index) {
+                    final barang = filteredBarang[index];
+                    return _buildItemCard(
+                      c: c,
+                      barang: barang,
+                      onEdit: () => _showEditDialog(context, c, barang),
+                    );
+                  },
+                ),
+              const SizedBox(height: 80),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -289,117 +273,82 @@ class _ManajemenBarangScreenState extends ConsumerState<ManajemenBarangScreen> {
           (Match m) => '${m[1]}.',
         )}';
 
-    return Container(
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isPulsing ? statusColor.withValues(alpha: 0.5) : cardBorderColor,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 5,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.all(12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Flexible(
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: c.primaryGreen.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    barang.kategori.toUpperCase(),
+    return InkWell(
+      onTap: onEdit,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 0),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    barang.nama,
                     style: TextStyle(
-                      color: c.primaryGreen,
-                      fontSize: 8,
+                      color: c.darkText,
                       fontWeight: FontWeight.bold,
+                      fontSize: 16,
                     ),
-                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: c.primaryGreen.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          barang.kategori.toUpperCase(),
+                          style: TextStyle(
+                            color: c.primaryGreen,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        hargaFormatted,
+                        style: TextStyle(
+                          color: c.greyText,
+                          fontWeight: FontWeight.w500,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-              const SizedBox(width: 4),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: isPulsing
-                      ? statusColor.withValues(alpha: 0.1)
-                      : c.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: isPulsing
-                        ? statusColor.withValues(alpha: 0.5)
-                        : c.outlineVariant,
-                  ),
-                ),
-                child: Row(
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
                       Icons.inventory_2_outlined,
-                      size: 12,
-                      color:
-                          isPulsing ? statusColor : c.onSurfaceVariant,
+                      size: 16,
+                      color: isPulsing ? statusColor : c.onSurfaceVariant,
                     ),
                     const SizedBox(width: 4),
                     Text(
                       '${barang.stok}',
                       style: TextStyle(
-                        fontSize: 10,
+                        fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: isPulsing
-                            ? statusColor
-                            : c.onSurfaceVariant,
+                        color: isPulsing ? statusColor : c.onSurfaceVariant,
                       ),
                     ),
                   ],
                 ),
-              ),
-            ],
-          ),
-          const Spacer(),
-          Text(
-            barang.nama,
-            style: TextStyle(
-              color: c.darkText,
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
-            ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            hargaFormatted,
-            style: TextStyle(
-              color: c.primaryGreen,
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Divider(height: 1, color: c.outlineVariant),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Flexible(
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                const SizedBox(height: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
                     color: statusColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
@@ -416,46 +365,21 @@ class _ManajemenBarangScreenState extends ConsumerState<ManajemenBarangScreen> {
                         ),
                       ),
                       const SizedBox(width: 4),
-                      Flexible(
-                        child: Text(
-                          statusText,
-                          style: TextStyle(
-                            color: statusColor,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              InkWell(
-                onTap: onEdit,
-                borderRadius: BorderRadius.circular(8),
-                child: Padding(
-                  padding: const EdgeInsets.all(4.0),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
                       Text(
-                        'Edit',
+                        statusText,
                         style: TextStyle(
-                          color: c.secondary,
+                          color: statusColor,
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(width: 2),
-                      Icon(Icons.edit, size: 10, color: c.secondary),
                     ],
                   ),
                 ),
-              ),
-            ],
-          ),
-        ],
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -492,10 +416,14 @@ class _ManajemenBarangScreenState extends ConsumerState<ManajemenBarangScreen> {
                     labelText: 'Kategori',
                     border: OutlineInputBorder(),
                   ),
-                  items: ['Sembako', 'Makanan', 'Minuman', 'Kebutuhan Rumah']
-                      .map((k) =>
-                          DropdownMenuItem(value: k, child: Text(k)))
-                      .toList(),
+                  items: () {
+                    final defaultKategori = ['Sembako', 'Makanan', 'Minuman', 'Rokok', 'Kebutuhan Rumah', 'Lainnya'];
+                    final list = defaultKategori.toList();
+                    if (!list.contains(kategori)) {
+                      list.add(kategori);
+                    }
+                    return list.map((k) => DropdownMenuItem(value: k, child: Text(k))).toList();
+                  }(),
                   onChanged: (val) {
                     setDialogState(() => kategori = val!);
                   },
