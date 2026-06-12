@@ -22,6 +22,9 @@ class _TambahBarangScreenState extends ConsumerState<TambahBarangScreen> {
 
   String? _kategori;
   String? _satuan;
+  DateTime? _tanggalKedaluwarsa;
+  bool _isLoading = false;
+
   void dispose() {
     _namaController.dispose();
     _barcodeController.dispose();
@@ -32,33 +35,60 @@ class _TambahBarangScreenState extends ConsumerState<TambahBarangScreen> {
     super.dispose();
   }
 
-  void _simpanBarang() {
+  Future<void> _simpanBarang() async {
     if (_formKey.currentState!.validate()) {
       final nama = _namaController.text.trim();
+      final barcode = _barcodeController.text.trim();
+      final hargaBeli = int.tryParse(_hargaBeliController.text.trim()) ?? 0;
       final harga = int.tryParse(_hargaJualController.text.trim()) ?? 0;
       final stok = int.tryParse(_stokAwalController.text.trim()) ?? 0;
       final stokMin = int.tryParse(_stokMinController.text.trim()) ?? 10;
       final kategori = _kategori ?? 'Sembako';
+      final satuan = _satuan;
 
       final newBarang = Barang(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         nama: nama,
+        barcode: barcode,
         kategori: kategori,
+        satuan: satuan,
+        hargaBeli: hargaBeli,
         harga: harga,
         stok: stok,
         stokMinimum: stokMin,
+        tanggalKedaluwarsa: _tanggalKedaluwarsa,
       );
 
-      ref.read(barangProvider.notifier).tambahBarang(newBarang);
+      setState(() => _isLoading = true);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Barang "$nama" berhasil ditambahkan!'),
-          backgroundColor: AppColors.of(context).statusSuccess,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-      Navigator.pop(context);
+      try {
+        await ref.read(barangProvider.notifier).tambahBarang(newBarang);
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Barang "$nama" berhasil ditambahkan!'),
+              backgroundColor: AppColors.of(context).statusSuccess,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+          Navigator.pop(context);
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Gagal menyimpan barang: $e'),
+              backgroundColor: AppColors.of(context).statusCritical,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() => _isLoading = false);
+        }
+      }
     }
   }
 
@@ -504,13 +534,15 @@ class _TambahBarangScreenState extends ConsumerState<TambahBarangScreen> {
                         const SizedBox(height: 4),
                         InkWell(
                           onTap: () async {
-                            await showDatePicker(
+                            final picked = await showDatePicker(
                               context: context,
-                              initialDate: DateTime.now(),
+                              initialDate: _tanggalKedaluwarsa ?? DateTime.now(),
                               firstDate: DateTime.now(),
                               lastDate: DateTime(2100),
                             );
-                            // Visual implementation only for now
+                            if (picked != null) {
+                              setState(() => _tanggalKedaluwarsa = picked);
+                            }
                           },
                           child: Container(
                             height: 48,
@@ -522,8 +554,12 @@ class _TambahBarangScreenState extends ConsumerState<TambahBarangScreen> {
                             ),
                             alignment: Alignment.centerLeft,
                             child: Text(
-                              'dd/mm/yyyy',
-                              style: TextStyle(color: c.onSurfaceVariant),
+                              _tanggalKedaluwarsa != null 
+                                ? '${_tanggalKedaluwarsa!.day.toString().padLeft(2, '0')}/${_tanggalKedaluwarsa!.month.toString().padLeft(2, '0')}/${_tanggalKedaluwarsa!.year}'
+                                : 'dd/mm/yyyy',
+                              style: TextStyle(
+                                color: _tanggalKedaluwarsa != null ? c.onSurface : c.onSurfaceVariant,
+                              ),
                             ),
                           ),
                         ),
@@ -605,18 +641,27 @@ class _TambahBarangScreenState extends ConsumerState<TambahBarangScreen> {
             ),
             elevation: 2,
           ),
-          onPressed: _simpanBarang,
-          child: const Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.save),
-              SizedBox(width: 8),
-              Text(
-                'Simpan Barang',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          onPressed: _isLoading ? null : _simpanBarang,
+          child: _isLoading 
+            ? const SizedBox(
+                height: 24,
+                width: 24,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2,
+                ),
+              )
+            : const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.save),
+                  SizedBox(width: 8),
+                  Text(
+                    'Simpan Barang',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ],
               ),
-            ],
-          ),
         ),
       ),
     );

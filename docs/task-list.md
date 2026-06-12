@@ -87,10 +87,10 @@
 - [ ] **Kategori Barang** — CRUD kategori + default (Makanan, Minuman, Sembako, Rokok, Lainnya)
 
 ### Reminder & Notifikasi (REM-01 s/d REM-04)
-- [ ] Query barang stok ≤ minimum → alert stok rendah
-- [ ] Query barang kedaluwarsa ≤ 7 hari → klasifikasi 🟢🟡🔴
-- [ ] Badge count di ikon notifikasi
-- [ ] **Halaman Alert** — tab Stok Rendah & Kedaluwarsa + quick action
+- [x] Query barang stok ≤ minimum → alert stok rendah
+- [x] Query barang kedaluwarsa ≤ 7 hari → klasifikasi 🟢🟡🔴
+- [x] Badge count di ikon notifikasi
+- [x] **Halaman Alert** — tab Stok Rendah & Kedaluwarsa + quick action
 - [ ] Setup `flutter_local_notifications` + schedule daily check
 
 ### Polish
