@@ -151,18 +151,7 @@ Anggota 2 (Reminder)      ──► Anggota 1    (Dashboard butuh data alert)
 
 ---
 
-## 📋 Git Branching
 
-```
-main ── develop ─┬─ feature/auth         ← Anggota 1
-                 ├─ feature/dashboard    ← Anggota 1
-                 ├─ feature/settings     ← Anggota 1
-                 ├─ feature/barang       ← Anggota 2
-                 ├─ feature/barcode      ← Anggota 2
-                 ├─ feature/reminder     ← Anggota 2
-                 ├─ feature/transaksi    ← Anggota 3
-                 ├─ feature/utang        ← Anggota 3
-                 └─ feature/laporan      ← Anggota 3
 ```
 
 ---

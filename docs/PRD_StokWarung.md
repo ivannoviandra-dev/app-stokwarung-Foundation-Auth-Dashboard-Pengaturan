@@ -10,7 +10,7 @@
 | **Nama Aplikasi** | StokWarung |
 | **Kategori** | Inventory UMKM Mikro / SMB SaaS |
 | **Platform** | Android (prioritas), iOS, Web |
-| **Tech Stack** | Flutter + Firebase (Auth, Firestore, Cloud Functions) |
+| **Tech Stack** | Flutter + Supabase (Auth, Firestore, Cloud Functions) |
 | **Target User** | Pemilik warung kecil / toko kelontong yang belum menggunakan sistem POS |
 | **Monetisasi** | Freemium, langganan murah, atau paket fitur laporan |
 | **Versi** | 1.0.0 (MVP) |
@@ -319,7 +319,7 @@ class Utang {
 |---|---|
 | **Frontend** | Flutter (Dart) |
 | **State Management** | Riverpod / BLoC |
-| **Backend** | Firebase (Firestore, Auth, Cloud Functions) |
+| **Backend** | Supabase (Firestore, Auth, Cloud Functions) |
 | **Local Storage** | Hive / SQLite (offline-first) |
 | **Barcode Scanner** | `mobile_scanner` package |
 | **Notifikasi** | Firebase Cloud Messaging (FCM) + Local Notifications |
