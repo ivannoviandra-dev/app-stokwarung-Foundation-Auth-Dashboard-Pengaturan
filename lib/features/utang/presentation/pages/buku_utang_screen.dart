@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'bayar_utang_screen.dart';
+import '../../../reminder/presentation/pages/notifications_screen.dart';
+
 
 class BukuUtangScreen extends StatefulWidget {
   const BukuUtangScreen({super.key});
@@ -156,7 +158,12 @@ class _BukuUtangScreenState extends State<BukuUtangScreen> {
         actions: [
           IconButton(
             icon: Icon(Icons.notifications_none, color: c.onSurfaceVariant),
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+              );
+            },
           ),
           const SizedBox(width: 8),
         ],

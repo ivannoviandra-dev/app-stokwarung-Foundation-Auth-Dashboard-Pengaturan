@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../pengaturan/presentation/providers/settings_provider.dart';
 
 class AuthState {
   final bool isLoading;
@@ -77,6 +78,7 @@ class AuthNotifier extends Notifier<AuthState> {
       }
 
       state = state.copyWith(isLoading: false, isAuthenticated: true, role: userRole ?? role);
+      ref.invalidate(settingsProvider);
       return true;
     } on AuthException catch (e) {
       state = state.copyWith(
@@ -119,6 +121,7 @@ class AuthNotifier extends Notifier<AuthState> {
       );
       
       state = state.copyWith(isLoading: false);
+      ref.invalidate(settingsProvider);
       return true;
     } on AuthException catch (e) {
       state = state.copyWith(

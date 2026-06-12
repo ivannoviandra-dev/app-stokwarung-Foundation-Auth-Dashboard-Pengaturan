@@ -91,6 +91,8 @@ class KasirNotifier extends Notifier<KasirState> {
 
       final registerEmail = '$username@kasir.stokwarung.com';
 
+      final ownerNamaToko = owner.userMetadata?['nama_toko'] as String? ?? 'Toko Saya';
+
       // Gunakan REST API secara langsung untuk signUp agar tidak mengganggu sesi Owner
       final response = await http.post(
         Uri.parse('https://exjkwvlaovwbejudhcwn.supabase.co/auth/v1/signup'),
@@ -105,6 +107,7 @@ class KasirNotifier extends Notifier<KasirState> {
             'role': 'kasir',
             'nama_kasir': nama,
             'owner_id': owner.id,
+            'nama_toko': ownerNamaToko,
           }
         }),
       );

@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../features/kasir/presentation/pages/kasir_screen.dart';
 import '../../../../features/utang/presentation/pages/buku_utang_screen.dart';
 import '../../../../features/pengaturan/presentation/pages/pengaturan_kasir_screen.dart';
+import '../../../../features/reminder/presentation/pages/notifications_screen.dart';
 
 class DashboardKasirScreen extends ConsumerStatefulWidget {
   const DashboardKasirScreen({super.key});
@@ -122,7 +123,12 @@ class _DashboardKasirScreenState extends ConsumerState<DashboardKasirScreen> {
           ),
           child: IconButton(
             icon: Icon(Icons.notifications_none, color: c.greyText, size: 20),
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+              );
+            },
           ),
         ),
       ],

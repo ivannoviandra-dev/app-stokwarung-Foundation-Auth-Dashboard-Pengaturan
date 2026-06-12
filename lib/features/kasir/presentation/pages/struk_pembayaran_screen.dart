@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../reminder/presentation/pages/notifications_screen.dart';
 
 class StrukPembayaranScreen extends StatelessWidget {
   final List<Map<String, dynamic>> keranjang;
@@ -60,7 +61,12 @@ class StrukPembayaranScreen extends StatelessWidget {
         actions: [
           IconButton(
             icon: Icon(Icons.notifications_none, color: c.onSurfaceVariant),
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+              );
+            },
           ),
         ],
         bottom: PreferredSize(

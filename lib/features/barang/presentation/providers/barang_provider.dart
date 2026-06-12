@@ -64,15 +64,28 @@ class BarangNotifier extends Notifier<BarangState> {
   Future<void> fetchBarang() async {
     try {
       state = state.copyWith(isLoading: true);
-      final userId = _supabase.auth.currentUser?.id;
-      
-      // Ambil data dari tabel barang, jika ada filter berdasarkan user_id (opsional tergantung RLS)
-      var query = _supabase.from('barang').select();
-      if (userId != null) {
-        // query = query.eq('user_id', userId); // Sesuaikan dengan struktur tabel jika butuh filter eksplisit
+      final user = _supabase.auth.currentUser;
+      if (user == null) {
+        state = state.copyWith(semuaBarang: [], isLoading: false);
+        return;
+      }
+
+      // Jika user adalah kasir, ambil barang milik owner-nya
+      // Jika user adalah owner, ambil barang miliknya sendiri
+      final userRole = user.userMetadata?['role'] as String?;
+      final String targetUserId;
+      if (userRole == 'kasir') {
+        final ownerId = user.userMetadata?['owner_id'] as String?;
+        if (ownerId == null) {
+          state = state.copyWith(semuaBarang: [], isLoading: false);
+          return;
+        }
+        targetUserId = ownerId;
+      } else {
+        targetUserId = user.id;
       }
       
-      final response = await query;
+      final response = await _supabase.from('barang').select().eq('user_id', targetUserId);
       final List<Barang> loadedBarang = (response as List).map((json) => Barang.fromJson(json)).toList();
       
       state = state.copyWith(semuaBarang: loadedBarang, isLoading: false);
@@ -151,6 +164,29 @@ class BarangNotifier extends Notifier<BarangState> {
       print('Error updating barang: $e');
       state = state.copyWith(isLoading: false);
       rethrow;
+    }
+  }
+
+  Future<void> kurangiStok(String id, int qty) async {
+    try {
+      final index = state.semuaBarang.indexWhere((b) => b.id == id);
+      if (index == -1) return;
+      
+      final barang = state.semuaBarang[index];
+      final sisaStok = barang.stok - qty;
+      
+      // Optimistic UI update
+      final updatedLocal = barang.copyWith(stok: sisaStok);
+      state = state.copyWith(
+        semuaBarang: state.semuaBarang.map((b) => b.id == id ? updatedLocal : b).toList()
+      );
+
+      // Update di database
+      await _supabase.from('barang').update({'stok': sisaStok}).eq('id', id);
+    } catch (e) {
+      print('Error kurangi stok: $e');
+      // Jika terjadi error, idealnya me-rollback data lokal di sini,
+      // tapi untuk sementara minimal mencatat error.
     }
   }
 

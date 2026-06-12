@@ -4,6 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../providers/settings_provider.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../barang/presentation/providers/barang_provider.dart';
+import '../providers/kasir_provider.dart';
 
 class PengaturanKasirScreen extends ConsumerWidget {
   const PengaturanKasirScreen({super.key});
@@ -274,9 +277,17 @@ class PengaturanKasirScreen extends ConsumerWidget {
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                         ),
-                        onPressed: () {
+                        onPressed: () async {
                           Navigator.pop(ctx);
-                          context.go('/login');
+                          // Logout dari Supabase dan bersihkan state
+                          await ref.read(authProvider.notifier).logout();
+                          // Invalidate providers agar data di-refresh saat login akun lain
+                          ref.invalidate(settingsProvider);
+                          ref.invalidate(barangProvider);
+                          ref.invalidate(kasirProvider);
+                          if (context.mounted) {
+                            context.go('/login');
+                          }
                         },
                         child: const Text('Keluar'),
                       ),

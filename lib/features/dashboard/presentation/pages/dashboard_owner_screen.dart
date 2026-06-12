@@ -14,8 +14,8 @@ class DashboardOwnerScreen extends ConsumerWidget {
     final dashboardData = ref.watch(dashboardProvider);
     final isDarkMode = ref.watch(settingsProvider.select((s) => s.darkMode));
     final c = AppColors.of(context);
-    final userMetadata = Supabase.instance.client.auth.currentUser?.userMetadata;
-    final namaToko = userMetadata?['nama_toko'] as String? ?? 'Warung Saya';
+    final settings = ref.watch(settingsProvider);
+    final namaToko = settings.namaToko;
 
     return Scaffold(
       backgroundColor: c.background,

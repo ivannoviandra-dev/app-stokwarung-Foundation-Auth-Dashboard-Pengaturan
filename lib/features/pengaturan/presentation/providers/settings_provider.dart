@@ -53,8 +53,15 @@ class SettingsNotifier extends Notifier<SettingsState> {
     );
   }
 
-  void updateNamaToko(String value) {
+  Future<void> updateNamaToko(String value) async {
     state = state.copyWith(namaToko: value);
+    try {
+      await Supabase.instance.client.auth.updateUser(
+        UserAttributes(data: {'nama_toko': value}),
+      );
+    } catch (e) {
+      print('Error saving nama toko: $e');
+    }
   }
 
   void updateAlamat(String value) {

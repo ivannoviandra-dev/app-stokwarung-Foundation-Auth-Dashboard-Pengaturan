@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../data/models/barang_model.dart';
 import '../providers/barang_provider.dart';
 import 'tambah_barang_screen.dart';
+import '../../../reminder/presentation/pages/notifications_screen.dart';
 
 class ManajemenBarangScreen extends ConsumerStatefulWidget {
   const ManajemenBarangScreen({super.key});
@@ -72,7 +73,12 @@ class _ManajemenBarangScreenState extends ConsumerState<ManajemenBarangScreen> {
           IconButton(
             icon: Icon(Icons.notifications_none_outlined,
                 color: primaryGreen),
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+              );
+            },
           ),
           const SizedBox(width: 16),
         ],
@@ -268,6 +274,20 @@ class _ManajemenBarangScreenState extends ConsumerState<ManajemenBarangScreen> {
         isPulsing = false;
     }
 
+    String? kedaluwarsaText;
+    Color? kedaluwarsaColor;
+
+    if (barang.tanggalKedaluwarsa != null) {
+      final daysToExpire = barang.tanggalKedaluwarsa!.difference(DateTime.now()).inDays;
+      if (daysToExpire < 0) {
+        kedaluwarsaText = 'Kedaluwarsa';
+        kedaluwarsaColor = c.statusCritical;
+      } else if (daysToExpire <= 7) {
+        kedaluwarsaText = 'Segera Kedaluwarsa';
+        kedaluwarsaColor = c.statusWarning;
+      }
+    }
+
     final hargaFormatted = 'Rp${barang.harga.toString().replaceAllMapped(
           RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
           (Match m) => '${m[1]}.',
@@ -347,6 +367,31 @@ class _ManajemenBarangScreenState extends ConsumerState<ManajemenBarangScreen> {
                   ],
                 ),
                 const SizedBox(height: 6),
+                if (kedaluwarsaText != null) ...[
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: kedaluwarsaColor!.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.warning_amber_rounded, size: 10, color: kedaluwarsaColor),
+                        const SizedBox(width: 4),
+                        Text(
+                          kedaluwarsaText,
+                          style: TextStyle(
+                            color: kedaluwarsaColor,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                ],
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
