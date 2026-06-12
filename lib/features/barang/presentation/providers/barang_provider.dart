@@ -64,15 +64,14 @@ class BarangNotifier extends Notifier<BarangState> {
   Future<void> fetchBarang() async {
     try {
       state = state.copyWith(isLoading: true);
+      // Ambil data dari tabel barang, filter berdasarkan user_id agar akun baru kosong
       final userId = _supabase.auth.currentUser?.id;
-      
-      // Ambil data dari tabel barang, jika ada filter berdasarkan user_id (opsional tergantung RLS)
-      var query = _supabase.from('barang').select();
-      if (userId != null) {
-        // query = query.eq('user_id', userId); // Sesuaikan dengan struktur tabel jika butuh filter eksplisit
+      if (userId == null) {
+        state = state.copyWith(semuaBarang: [], isLoading: false);
+        return;
       }
       
-      final response = await query;
+      final response = await _supabase.from('barang').select().eq('user_id', userId);
       final List<Barang> loadedBarang = (response as List).map((json) => Barang.fromJson(json)).toList();
       
       state = state.copyWith(semuaBarang: loadedBarang, isLoading: false);

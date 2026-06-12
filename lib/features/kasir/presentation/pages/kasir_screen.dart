@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'struk_pembayaran_screen.dart';
+import '../../../barang/presentation/providers/barang_provider.dart';
 
 class KasirScreen extends ConsumerStatefulWidget {
   const KasirScreen({super.key});
@@ -125,16 +126,29 @@ class _KasirScreenState extends ConsumerState<KasirScreen> {
                       style: TextStyle(color: c.onSurface, fontSize: 16),
                       onSubmitted: (value) {
                         if (value.trim().isNotEmpty) {
-                          setState(() {
-                            final index = _keranjang.indexWhere((item) =>
-                                item['nama'].toString().toLowerCase() ==
-                                    value.trim().toLowerCase());
-                            if (index >= 0) {
-                              _keranjang[index]['qty'] += 1;
-                            } else {
-                              _keranjang.add({'nama': value.trim(), 'harga': 10000, 'qty': 1});
-                            }
-                          });
+                          final semuaBarang = ref.read(barangProvider).semuaBarang;
+                          final foundBarang = semuaBarang.where((b) => 
+                            b.nama.toLowerCase() == value.trim().toLowerCase() || 
+                            (b.barcode != null && b.barcode == value.trim())
+                          ).toList();
+
+                          if (foundBarang.isNotEmpty) {
+                            final barang = foundBarang.first;
+                            setState(() {
+                              final index = _keranjang.indexWhere((item) =>
+                                  item['nama'].toString().toLowerCase() ==
+                                      barang.nama.toLowerCase());
+                              if (index >= 0) {
+                                _keranjang[index]['qty'] += 1;
+                              } else {
+                                _keranjang.add({'nama': barang.nama, 'harga': barang.harga, 'qty': 1});
+                              }
+                            });
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Barang tidak ditemukan!')),
+                            );
+                          }
                           _searchController.clear();
                         }
                       },
@@ -154,14 +168,10 @@ class _KasirScreenState extends ConsumerState<KasirScreen> {
                           topRight: Radius.circular(8), bottomRight: Radius.circular(8),
                         ),
                         onTap: () {
-                          setState(() {
-                            final index = _keranjang.indexWhere((item) => item['nama'] == 'Barang Scan QR');
-                            if (index >= 0) {
-                              _keranjang[index]['qty'] += 1;
-                            } else {
-                              _keranjang.add({'nama': 'Barang Scan QR', 'harga': 15000, 'qty': 1});
-                            }
-                          });
+                          // Dummy action untuk tombol scan QR, sebaiknya memunculkan dialog/camera scanner
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Fitur scan QR belum diimplementasi sepenuhnya')),
+                          );
                         },
                         child: Icon(Icons.qr_code_scanner, color: c.primary),
                       ),
@@ -230,9 +240,11 @@ class _KasirScreenState extends ConsumerState<KasirScreen> {
                                   const SizedBox(height: 16),
                                   ElevatedButton.icon(
                                     onPressed: () {
-                                      setState(() {
-                                        _keranjang.add({'nama': 'Barang Manual', 'harga': 12000, 'qty': 1});
-                                      });
+                                      // Arahkan kursor ke input pencarian saat tombol "Tambah Barang" diklik
+                                      FocusScope.of(context).requestFocus(FocusNode());
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(content: Text('Silakan cari nama barang di atas')),
+                                      );
                                     },
                                     icon: const Icon(Icons.add),
                                     label: const Text('Tambah Barang'),

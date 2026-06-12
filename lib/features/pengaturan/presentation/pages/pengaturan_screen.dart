@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../providers/settings_provider.dart';
 import '../providers/kasir_provider.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../barang/presentation/providers/barang_provider.dart';
 
 class PengaturanScreen extends ConsumerWidget {
   const PengaturanScreen({super.key});
@@ -404,9 +406,15 @@ class PengaturanScreen extends ConsumerWidget {
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                         ),
-                        onPressed: () {
+                        onPressed: () async {
                           Navigator.pop(ctx);
-                          context.go('/login');
+                          // Logout dari Supabase dan bersihkan state
+                          await ref.read(authProvider.notifier).logout();
+                          // Invalidate barangProvider agar data di-refresh saat login akun lain
+                          ref.invalidate(barangProvider);
+                          if (context.mounted) {
+                            context.go('/login');
+                          }
                         },
                         child: const Text('Keluar'),
                       ),

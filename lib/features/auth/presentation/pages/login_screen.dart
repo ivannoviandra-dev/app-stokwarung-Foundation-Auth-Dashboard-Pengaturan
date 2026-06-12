@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../providers/auth_provider.dart';
+import '../../../barang/presentation/providers/barang_provider.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -301,6 +302,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                                 
                                             if (success) {
                                               if (context.mounted) {
+                                                // Invalidate barangProvider agar fetch ulang data untuk user baru
+                                                ref.invalidate(barangProvider);
                                                 if (_isOwnerSelected) {
                                                   context.go('/dashboard_owner');
                                                 } else {
