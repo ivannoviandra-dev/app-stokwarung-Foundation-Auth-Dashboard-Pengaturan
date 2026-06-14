@@ -24,10 +24,12 @@ class _NotifikasiScreenState extends ConsumerState<NotifikasiScreen> {
     final dashboard = ref.read(dashboardProvider);
     if (dashboard.perluPerhatian.isEmpty) return;
 
-    final alerts = dashboard.perluPerhatian.map((item) => {
-      'title': item.title,
-      'body': item.subtitle,
-      'type': item.type,
+    final alerts = dashboard.perluPerhatian.map((item) {
+      return <String, String>{
+        'title': item.title,
+        'body': item.subtitle,
+        'type': item.type,
+      };
     }).toList();
 
     await NotificationService().sendAlertNotifications(alerts: alerts);

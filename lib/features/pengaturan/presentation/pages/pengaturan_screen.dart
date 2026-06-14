@@ -682,7 +682,7 @@ class PengaturanScreen extends ConsumerWidget {
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                 ),
-                onPressed: () {
+                onPressed: () async {
                   final oldPass = oldPassController.text;
                   final newPass = newPassController.text;
                   final confirmPass = confirmPassController.text;
@@ -723,19 +723,21 @@ class PengaturanScreen extends ConsumerWidget {
                     return;
                   }
 
-                  final success = ref.read(settingsProvider.notifier).changePassword(oldPass, newPass);
-                  Navigator.pop(ctx);
-
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(success
-                          ? 'Password berhasil diubah!'
-                          : 'Password lama salah'),
-                      backgroundColor: success ? c.primary : c.statusCritical,
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    ),
-                  );
+                  final success = await ref.read(settingsProvider.notifier).changePassword(oldPass, newPass);
+                  
+                  if (context.mounted) {
+                    Navigator.pop(ctx);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(success
+                            ? 'Password berhasil diubah!'
+                            : 'Password lama salah atau terjadi kesalahan'),
+                        backgroundColor: success ? c.primary : c.statusCritical,
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                    );
+                  }
                 },
                 child: const Text('Simpan'),
               ),

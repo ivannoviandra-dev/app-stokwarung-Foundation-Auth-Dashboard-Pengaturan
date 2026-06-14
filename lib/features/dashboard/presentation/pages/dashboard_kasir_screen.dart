@@ -7,6 +7,7 @@ import '../../../../features/kasir/presentation/pages/kasir_screen.dart';
 import '../../../../features/utang/presentation/pages/buku_utang_screen.dart';
 import '../../../../features/pengaturan/presentation/pages/pengaturan_kasir_screen.dart';
 import '../../../../features/reminder/presentation/pages/notifications_screen.dart';
+import '../providers/dashboard_provider.dart';
 
 class DashboardKasirScreen extends ConsumerStatefulWidget {
   const DashboardKasirScreen({super.key});
@@ -19,10 +20,34 @@ class _DashboardKasirScreenState extends ConsumerState<DashboardKasirScreen> {
   int _selectedIndex = 0;
 
   @override
+  void initState() {
+    super.initState();
+    _refreshSession();
+  }
+
+  Future<void> _refreshSession() async {
+    try {
+      await Supabase.instance.client.auth.refreshSession();
+      if (mounted) setState(() {});
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  String _formatCurrency(int amount) {
+    final str = amount.toString().replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+      (Match m) => '${m[1]}.',
+    );
+    return 'Rp$str';
+  }
+
+  @override
   Widget build(BuildContext context) {
     final c = AppColors.of(context);
     final userMetadata = Supabase.instance.client.auth.currentUser?.userMetadata;
     final namaToko = userMetadata?['nama_toko'] as String? ?? 'Warung Saya';
+    final dashboardData = ref.watch(dashboardProvider);
 
     return Scaffold(
       backgroundColor: c.background,
@@ -58,7 +83,7 @@ class _DashboardKasirScreenState extends ConsumerState<DashboardKasirScreen> {
                   const SizedBox(height: 24),
 
                   // Bento Grid
-                  _buildBentoGrid(c),
+                  _buildBentoGrid(c, dashboardData),
                   const SizedBox(height: 24),
 
                   // Recent Activity Feed
@@ -187,7 +212,7 @@ class _DashboardKasirScreenState extends ConsumerState<DashboardKasirScreen> {
     );
   }
 
-  Widget _buildBentoGrid(AppColors c) {
+  Widget _buildBentoGrid(AppColors c, DashboardData data) {
     return Column(
       children: [
         // Transaksi Hari Ini
@@ -220,9 +245,9 @@ class _DashboardKasirScreenState extends ConsumerState<DashboardKasirScreen> {
                       RichText(
                         text: TextSpan(
                           style: TextStyle(color: c.darkText),
-                          children: const [
-                            TextSpan(text: '0 ', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-                            TextSpan(text: 'Pesanan', style: TextStyle(fontSize: 14)),
+                          children: [
+                            TextSpan(text: '${data.totalTransaksi} ', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                            const TextSpan(text: 'Pesanan', style: TextStyle(fontSize: 14)),
                           ],
                         ),
                       ),
@@ -237,7 +262,7 @@ class _DashboardKasirScreenState extends ConsumerState<DashboardKasirScreen> {
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
-                  '+Rp0',
+                  '+${_formatCurrency(data.totalPenjualanHariIni)}',
                   style: TextStyle(color: c.statusSuccess, fontSize: 12, fontWeight: FontWeight.bold),
                 ),
               ),

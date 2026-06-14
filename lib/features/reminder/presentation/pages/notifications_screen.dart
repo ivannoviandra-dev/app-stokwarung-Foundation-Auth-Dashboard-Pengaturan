@@ -31,10 +31,12 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     final dashboard = ref.read(dashboardProvider);
     if (dashboard.perluPerhatian.isEmpty) return;
 
-    final alerts = dashboard.perluPerhatian.map((item) => {
-      'title': item.title,
-      'body': item.subtitle,
-      'type': item.type,
+    final alerts = dashboard.perluPerhatian.map((item) {
+      return <String, String>{
+        'title': item.title,
+        'body': item.subtitle,
+        'type': item.type,
+      };
     }).toList();
 
     await NotificationService().sendAlertNotifications(alerts: alerts);
@@ -274,4 +276,3 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     }
   }
 }
-

@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../providers/laporan_provider.dart';
+import '../services/pdf_service.dart';
 
-class LaporanScreen extends StatelessWidget {
+class LaporanScreen extends ConsumerWidget {
   const LaporanScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final c = AppColors.of(context);
+    final data = ref.watch(laporanProvider);
 
     return Scaffold(
       backgroundColor: c.surface,
@@ -15,22 +20,12 @@ class LaporanScreen extends StatelessWidget {
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
-        leading: IconButton(
-          icon: Icon(Icons.menu, color: c.primary),
-          onPressed: () {},
-        ),
+
         title: Text(
           'Laporan',
           style: TextStyle(color: c.primary, fontSize: 20, fontWeight: FontWeight.bold),
         ),
-        actions: [
-          Container(
-            margin: const EdgeInsets.only(right: 16),
-            width: 32, height: 32,
-            decoration: BoxDecoration(color: c.primaryContainer, shape: BoxShape.circle),
-            child: Icon(Icons.account_circle, color: c.onPrimaryContainer, size: 20),
-          ),
-        ],
+
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1.0),
           child: Container(color: c.outlineVariant, height: 1.0),
@@ -77,15 +72,15 @@ class LaporanScreen extends StatelessWidget {
                           Row(
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
-                              const Text('Rp 0', style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
+                              Text(_formatCurrency(data.labaBersihBulanIni), style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
                               const SizedBox(width: 8),
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                 decoration: BoxDecoration(color: c.onPrimaryFixedVariant, borderRadius: BorderRadius.circular(16)),
                                 child: Row(children: [
-                                  Icon(Icons.arrow_upward, color: c.primaryFixed, size: 14),
+                                  Icon(data.labaBersihBulanIni >= 0 ? Icons.arrow_upward : Icons.arrow_downward, color: c.primaryFixed, size: 14),
                                   const SizedBox(width: 2),
-                                  Text('0%', style: TextStyle(color: c.primaryFixed, fontSize: 12, fontWeight: FontWeight.bold)),
+                                  Text('${data.labaPersentase}%', style: TextStyle(color: c.primaryFixed, fontSize: 12, fontWeight: FontWeight.bold)),
                                 ]),
                               ),
                             ],
@@ -101,7 +96,7 @@ class LaporanScreen extends StatelessWidget {
                                   children: [
                                     Text('Total Penjualan', style: TextStyle(color: c.primaryFixed.withValues(alpha: 0.8), fontSize: 12, fontWeight: FontWeight.w600)),
                                     const SizedBox(height: 4),
-                                    const Text('Rp 0', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600)),
+                                    Text(_formatCurrency(data.totalPenjualan), style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600)),
                                   ],
                                 ),
                               ),
@@ -111,7 +106,7 @@ class LaporanScreen extends StatelessWidget {
                                   children: [
                                     Text('Total Modal', style: TextStyle(color: c.primaryFixed.withValues(alpha: 0.8), fontSize: 12, fontWeight: FontWeight.w600)),
                                     const SizedBox(height: 4),
-                                    const Text('Rp 0', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600)),
+                                    Text(_formatCurrency(data.totalModal), style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600)),
                                   ],
                                 ),
                               ),
@@ -149,15 +144,9 @@ class LaporanScreen extends StatelessWidget {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        _buildBar(context, 'Sen', 0.0, false),
-                        _buildBar(context, 'Sel', 0.0, false),
-                        _buildBar(context, 'Rab', 0.0, false),
-                        _buildBar(context, 'Kam', 0.0, false),
-                        _buildBar(context, 'Jum', 0.0, false),
-                        _buildBar(context, 'Sab', 0.0, false),
-                        _buildBar(context, 'Min', 0.0, false),
-                      ],
+                      children: data.tren7Hari.map((day) {
+                        return _buildBar(context, day.hari, day.ratio, day.ratio == 1.0 && day.total > 0);
+                      }).toList(),
                     ),
                   ),
                 ],
@@ -165,15 +154,20 @@ class LaporanScreen extends StatelessWidget {
             ),
             const SizedBox(height: 24),
 
-            // Best Sellers
             Row(children: [
               Icon(Icons.stars, color: c.profitGold),
               const SizedBox(width: 8),
               Text('Barang Terlaris', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: c.onSurface)),
             ]),
             const SizedBox(height: 12),
-            const SizedBox(height: 12),
-            Center(child: Text('Belum ada data barang terlaris', style: TextStyle(color: c.onSurfaceVariant))),
+            data.barangTerlaris.isEmpty
+                ? Center(child: Padding(padding: const EdgeInsets.symmetric(vertical: 24), child: Text('Belum ada data barang terlaris', style: TextStyle(color: c.onSurfaceVariant))))
+                : Column(
+                    children: data.barangTerlaris.map((item) => Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0),
+                      child: _buildItemRankRow(context, item.nama, item.subtitle, item.nilai, item.isPositive),
+                    )).toList(),
+                  ),
             const SizedBox(height: 24),
 
             // High Margin
@@ -183,18 +177,33 @@ class LaporanScreen extends StatelessWidget {
               Text('Margin Tertinggi', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: c.onSurface)),
             ]),
             const SizedBox(height: 12),
-            const SizedBox(height: 12),
-            Center(child: Text('Belum ada data margin', style: TextStyle(color: c.onSurfaceVariant))),
+            data.marginTertinggi.isEmpty
+                ? Center(child: Padding(padding: const EdgeInsets.symmetric(vertical: 24), child: Text('Belum ada data margin', style: TextStyle(color: c.onSurfaceVariant))))
+                : Column(
+                    children: data.marginTertinggi.map((item) => Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0),
+                      child: _buildMarginRow(context, item.nama, item.subtitle, item.nilai),
+                    )).toList(),
+                  ),
             const SizedBox(height: 32),
 
             // Download Button
             ElevatedButton(
+              onPressed: () async {
+                final userMetadata = Supabase.instance.client.auth.currentUser?.userMetadata;
+                final namaToko = userMetadata?['nama_toko'] as String? ?? 'Warung Saya';
+                
+                await PdfService.generateAndPrintLaporan(
+                  namaWarung: namaToko,
+                  data: data,
+                );
+              },
               style: ElevatedButton.styleFrom(
-                backgroundColor: c.primary, foregroundColor: Colors.white,
-                minimumSize: const Size(double.infinity, 48),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), elevation: 4,
+                backgroundColor: c.primary,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
-              onPressed: () {},
               child: const Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                 Icon(Icons.picture_as_pdf), SizedBox(width: 8),
                 Text('Unduh Laporan PDF', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
@@ -205,6 +214,14 @@ class LaporanScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _formatCurrency(int amount) {
+    final str = amount.toString().replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+      (Match m) => '${m[1]}.',
+    );
+    return 'Rp$str';
   }
 
   Widget _buildBar(BuildContext context, String label, double heightRatio, bool isHighest) {

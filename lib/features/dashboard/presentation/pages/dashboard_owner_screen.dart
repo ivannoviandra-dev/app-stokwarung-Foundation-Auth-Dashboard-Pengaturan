@@ -9,6 +9,14 @@ import '../providers/dashboard_provider.dart';
 class DashboardOwnerScreen extends ConsumerWidget {
   const DashboardOwnerScreen({super.key});
 
+  String _formatCurrency(int amount) {
+    final str = amount.toString().replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+      (Match m) => '${m[1]}.',
+    );
+    return 'Rp$str';
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final dashboardData = ref.watch(dashboardProvider);
@@ -180,7 +188,7 @@ class DashboardOwnerScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'Rp ${dashboardData.profitHariIni.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}',
+                      _formatCurrency(dashboardData.profitHariIni),
                       style: TextStyle(
                         color: c.darkText,
                         fontSize: 28,
@@ -230,7 +238,7 @@ class DashboardOwnerScreen extends ConsumerWidget {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          'Rp ${(dashboardData.totalPiutang / 1000000).toStringAsFixed(1)}jt',
+                          _formatCurrency(dashboardData.totalPiutang),
                           style: TextStyle(
                             color: c.piutangText,
                             fontSize: 24,

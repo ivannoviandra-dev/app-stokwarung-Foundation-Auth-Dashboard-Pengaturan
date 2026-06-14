@@ -23,7 +23,8 @@ class BarangState {
           selectedKategori == 'Semua' || b.kategori == selectedKategori;
       final matchSearch =
           searchQuery.isEmpty ||
-          b.nama.toLowerCase().contains(searchQuery.toLowerCase());
+          b.nama.toLowerCase().contains(searchQuery.toLowerCase()) ||
+          (b.barcode != null && b.barcode!.contains(searchQuery));
       return matchKategori && matchSearch;
     }).toList();
   }

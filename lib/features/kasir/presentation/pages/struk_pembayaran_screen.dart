@@ -28,6 +28,8 @@ class StrukPembayaranScreen extends StatelessWidget {
     final c = AppColors.of(context);
     final userMetadata = Supabase.instance.client.auth.currentUser?.userMetadata;
     final namaToko = userMetadata?['nama_toko'] as String? ?? 'Warung Saya';
+    final alamat = userMetadata?['alamat'] as String? ?? 'Alamat Belum Diatur';
+    final nomorHp = userMetadata?['nomor_hp'] as String? ?? '';
     
     final date = DateTime.now();
     final dateString = "${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}";
@@ -163,7 +165,7 @@ class StrukPembayaranScreen extends StatelessWidget {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  'JL. MELATI NO. 12, JAKARTA',
+                                  alamat.toUpperCase(),
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
                                     fontSize: 12,
@@ -172,6 +174,19 @@ class StrukPembayaranScreen extends StatelessWidget {
                                     color: c.onSurfaceVariant,
                                   ),
                                 ),
+                                if (nomorHp.isNotEmpty) ...[
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    'TELP: $nomorHp',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      letterSpacing: 0.5,
+                                      color: c.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ],
                                 const SizedBox(height: 16),
                                 Divider(color: c.outlineVariant),
                                 const SizedBox(height: 16),

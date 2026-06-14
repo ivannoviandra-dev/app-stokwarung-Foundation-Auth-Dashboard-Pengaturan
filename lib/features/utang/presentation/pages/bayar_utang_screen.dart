@@ -1,34 +1,42 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../data/models/pelanggan_model.dart';
+import '../../data/models/utang_model.dart';
+import '../providers/utang_provider.dart';
 
-class BayarUtangScreen extends StatefulWidget {
-  final Map<String, dynamic> pelanggan;
+class BayarUtangScreen extends ConsumerStatefulWidget {
+  final Pelanggan pelanggan;
 
   const BayarUtangScreen({super.key, required this.pelanggan});
 
   @override
-  State<BayarUtangScreen> createState() => _BayarUtangScreenState();
+  ConsumerState<BayarUtangScreen> createState() => _BayarUtangScreenState();
 }
 
-class _BayarUtangScreenState extends State<BayarUtangScreen> {
+class _BayarUtangScreenState extends ConsumerState<BayarUtangScreen> {
   late TextEditingController _amountController;
-  late int _totalUtang;
+  late TextEditingController _keteranganController;
   int _jumlahBayar = 0;
   String _metode = 'Tunai';
   String? _selectedChip;
+  String _jenisTransaksi = 'bayar'; // 'bayar' atau 'utang'
+  bool _isSaving = false;
+  late Future<List<Utang>> _riwayatFuture;
 
   @override
   void initState() {
     super.initState();
-    _totalUtang = widget.pelanggan['utang'] as int;
+    _riwayatFuture = ref.read(utangProvider.notifier).fetchRiwayatUtang(widget.pelanggan.id);
     _amountController = TextEditingController();
+    _keteranganController = TextEditingController();
     _amountController.addListener(() {
       final text = _amountController.text.replaceAll(RegExp(r'[^0-9]'), '');
       final parsed = int.tryParse(text) ?? 0;
       setState(() {
         _jumlahBayar = parsed;
         // Clear chip selection when user manually edits
-        if (_selectedChip == 'lunas' && parsed != _totalUtang) {
+        if (_selectedChip == 'lunas' && parsed != widget.pelanggan.totalUtang) {
           _selectedChip = null;
         } else if (_selectedChip == '50000' && parsed != 50000) {
           _selectedChip = null;
@@ -44,6 +52,7 @@ class _BayarUtangScreenState extends State<BayarUtangScreen> {
   @override
   void dispose() {
     _amountController.dispose();
+    _keteranganController.dispose();
     super.dispose();
   }
 
@@ -63,10 +72,81 @@ class _BayarUtangScreenState extends State<BayarUtangScreen> {
     _amountController.selection = TextSelection.fromPosition(TextPosition(offset: _amountController.text.length));
   }
 
+  Color _getAvatarColor(String nama, AppColors c) {
+    int hash = nama.codeUnits.fold(0, (a, b) => a + b);
+    switch (hash % 3) {
+      case 0: return c.primaryContainer;
+      case 1: return c.tertiaryContainer;
+      default: return c.secondaryContainer;
+    }
+  }
+
+  Color _getTextColor(String nama, AppColors c) {
+    int hash = nama.codeUnits.fold(0, (a, b) => a + b);
+    switch (hash % 3) {
+      case 0: return c.onPrimaryContainer;
+      case 1: return c.onTertiaryContainer;
+      default: return c.onSecondaryContainer;
+    }
+  }
+
+  Future<void> _simpan() async {
+    if (_jumlahBayar <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Masukkan jumlah nominal yang valid')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isSaving = true;
+    });
+
+    try {
+      await ref.read(utangProvider.notifier).tambahCatatanUtang(
+        pelangganId: widget.pelanggan.id,
+        jumlah: _jumlahBayar,
+        jenis: _jenisTransaksi,
+        keterangan: _keteranganController.text.isEmpty ? null : _keteranganController.text,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Transaksi berhasil disimpan!')),
+        );
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal menyimpan transaksi: $e')),
+        );
+        setState(() {
+          _isSaving = false;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final c = AppColors.of(context);
-    final int sisaUtang = (_totalUtang - _jumlahBayar) < 0 ? 0 : (_totalUtang - _jumlahBayar);
+    final inisial = widget.pelanggan.nama.isNotEmpty ? widget.pelanggan.nama[0].toUpperCase() : '?';
+    
+    // Get latest total utang from state just in case it updated
+    final utangState = ref.watch(utangProvider);
+    final currentPelanggan = utangState.pelangganList.firstWhere(
+      (p) => p.id == widget.pelanggan.id, 
+      orElse: () => widget.pelanggan
+    );
+    final totalUtang = currentPelanggan.totalUtang;
+
+    int sisaUtang;
+    if (_jenisTransaksi == 'bayar') {
+      sisaUtang = (totalUtang - _jumlahBayar) < 0 ? 0 : (totalUtang - _jumlahBayar);
+    } else {
+      sisaUtang = totalUtang + _jumlahBayar;
+    }
 
     return Scaffold(
       backgroundColor: c.background,
@@ -79,20 +159,13 @@ class _BayarUtangScreenState extends State<BayarUtangScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'Bayar Utang',
+          'Catat Transaksi',
           style: TextStyle(
             color: c.primary,
             fontSize: 20,
             fontWeight: FontWeight.bold,
           ),
         ),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.help_outline, color: c.primary),
-            onPressed: () {},
-          ),
-          const SizedBox(width: 8),
-        ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1.0),
           child: Container(color: c.outlineVariant, height: 1.0),
@@ -119,16 +192,16 @@ class _BayarUtangScreenState extends State<BayarUtangScreen> {
                           width: 56,
                           height: 56,
                           decoration: BoxDecoration(
-                            color: widget.pelanggan['bgColor'] as Color,
+                            color: _getAvatarColor(widget.pelanggan.nama, c),
                             shape: BoxShape.circle,
                           ),
                           alignment: Alignment.center,
                           child: Text(
-                            widget.pelanggan['inisial'] as String,
+                            inisial,
                             style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
-                              color: widget.pelanggan['textColor'] as Color,
+                              color: _getTextColor(widget.pelanggan.nama, c),
                             ),
                           ),
                         ),
@@ -138,7 +211,7 @@ class _BayarUtangScreenState extends State<BayarUtangScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                widget.pelanggan['nama'] as String,
+                                widget.pelanggan.nama,
                                 style: TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
@@ -147,9 +220,9 @@ class _BayarUtangScreenState extends State<BayarUtangScreen> {
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                'Pelanggan Setia',
+                                'Terdaftar pada: ${widget.pelanggan.createdAt.toLocal().toString().split(' ')[0]}',
                                 style: TextStyle(
-                                  fontSize: 14,
+                                  fontSize: 12,
                                   color: c.onSurfaceVariant,
                                 ),
                               ),
@@ -178,30 +251,31 @@ class _BayarUtangScreenState extends State<BayarUtangScreen> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              _formatCurrency(_totalUtang),
+                              _formatCurrency(totalUtang),
                               style: TextStyle(
                                 fontSize: 28,
                                 fontWeight: FontWeight.bold,
-                                color: c.statusCritical,
+                                color: totalUtang > 0 ? c.statusCritical : c.primary,
                               ),
                             ),
                           ],
                         ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: c.statusCritical.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            'Belum Lunas',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: c.statusCritical,
+                        if (totalUtang > 0)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: c.statusCritical.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              'Belum Lunas',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: c.statusCritical,
+                              ),
                             ),
                           ),
-                        ),
                       ],
                     ),
                   ],
@@ -209,9 +283,23 @@ class _BayarUtangScreenState extends State<BayarUtangScreen> {
               ),
               const SizedBox(height: 24),
 
+              // Transaction Type Toggle
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildTypeToggle(context, 'Terima Pembayaran', 'bayar', Icons.arrow_downward),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: _buildTypeToggle(context, 'Tambah Utang', 'utang', Icons.arrow_upward),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+
               // Input Section
               Text(
-                'JUMLAH BAYAR',
+                'NOMINAL',
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
@@ -261,21 +349,23 @@ class _BayarUtangScreenState extends State<BayarUtangScreen> {
               const SizedBox(height: 16),
 
               // Quick Amount Chips
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    _buildChip(context, 'Bayar Lunas', () => _setAmount(_totalUtang, 'lunas'), chipKey: 'lunas'),
-                    const SizedBox(width: 8),
-                    _buildChip(context, 'Rp50.000', () => _setAmount(50000, '50000'), chipKey: '50000'),
-                    const SizedBox(width: 8),
-                    _buildChip(context, 'Rp100.000', () => _setAmount(100000, '100000'), chipKey: '100000'),
-                    const SizedBox(width: 8),
-                    _buildChip(context, 'Rp200.000', () => _setAmount(200000, '200000'), chipKey: '200000'),
-                  ],
+              if (_jenisTransaksi == 'bayar')
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      if (totalUtang > 0)
+                        _buildChip(context, 'Bayar Lunas', () => _setAmount(totalUtang, 'lunas'), chipKey: 'lunas'),
+                      if (totalUtang > 0) const SizedBox(width: 8),
+                      _buildChip(context, 'Rp50.000', () => _setAmount(50000, '50000'), chipKey: '50000'),
+                      const SizedBox(width: 8),
+                      _buildChip(context, 'Rp100.000', () => _setAmount(100000, '100000'), chipKey: '100000'),
+                      const SizedBox(width: 8),
+                      _buildChip(context, 'Rp200.000', () => _setAmount(200000, '200000'), chipKey: '200000'),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(height: 24),
+              if (_jenisTransaksi == 'bayar') const SizedBox(height: 24),
 
               Text(
                 'KETERANGAN (OPSIONAL)',
@@ -287,9 +377,10 @@ class _BayarUtangScreenState extends State<BayarUtangScreen> {
               ),
               const SizedBox(height: 8),
               TextField(
+                controller: _keteranganController,
                 maxLines: 2,
                 decoration: InputDecoration(
-                  hintText: 'Contoh: Bayar cicilan pertama',
+                  hintText: _jenisTransaksi == 'bayar' ? 'Contoh: Bayar cicilan' : 'Contoh: Ambil rokok 2 bungkus',
                   filled: true,
                   fillColor: c.cardColor,
                   border: OutlineInputBorder(
@@ -314,7 +405,7 @@ class _BayarUtangScreenState extends State<BayarUtangScreen> {
                 decoration: BoxDecoration(
                   color: c.surfaceContainerHighest.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: c.outlineVariant, style: BorderStyle.solid), // Should be dashed, but we'll use solid to simplify
+                  border: Border.all(color: c.outlineVariant),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -344,11 +435,35 @@ class _BayarUtangScreenState extends State<BayarUtangScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 24),
-
-              // Metode Pembayaran
+              
+              if (_jenisTransaksi == 'bayar') ...[
+                const SizedBox(height: 24),
+                // Metode Pembayaran
+                Text(
+                  'METODE PEMBAYARAN',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: c.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildMetodeCard(context, 'Tunai', Icons.payments),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _buildMetodeCard(context, 'QRIS', Icons.qr_code_2),
+                    ),
+                  ],
+                ),
+              ],
+              
+              const SizedBox(height: 32),
               Text(
-                'METODE PEMBAYARAN',
+                'RIWAYAT TRANSAKSI',
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
@@ -356,18 +471,83 @@ class _BayarUtangScreenState extends State<BayarUtangScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildMetodeCard(context, 'Tunai', Icons.payments),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: _buildMetodeCard(context, 'QRIS', Icons.qr_code_2),
-                  ),
-                ],
+              FutureBuilder<List<Utang>>(
+                future: _riwayatFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Center(child: Padding(padding: const EdgeInsets.all(16.0), child: CircularProgressIndicator(color: c.primary)));
+                  }
+                  if (snapshot.hasError) {
+                    return Padding(padding: const EdgeInsets.all(16.0), child: Text('Error memuat riwayat', style: TextStyle(color: c.statusCritical)));
+                  }
+                  final riwayat = snapshot.data ?? [];
+                  if (riwayat.isEmpty) {
+                    return Padding(padding: const EdgeInsets.all(16.0), child: Text('Belum ada riwayat transaksi.', style: TextStyle(color: c.onSurfaceVariant)));
+                  }
+                  return Container(
+                    decoration: BoxDecoration(
+                      color: c.cardColor,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: c.outlineVariant),
+                    ),
+                    child: ListView.separated(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: riwayat.length,
+                      separatorBuilder: (_, __) => Divider(height: 1, color: c.outlineVariant),
+                      itemBuilder: (context, index) {
+                        final item = riwayat[index];
+                        final isBayar = item.jenis == 'bayar';
+                        return ListTile(
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          leading: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: isBayar ? c.statusSuccess.withValues(alpha: 0.1) : c.statusCritical.withValues(alpha: 0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              isBayar ? Icons.arrow_downward : Icons.arrow_upward,
+                              color: isBayar ? c.statusSuccess : c.statusCritical,
+                              size: 20,
+                            ),
+                          ),
+                          title: Text(
+                            isBayar ? 'Pembayaran' : 'Catat Utang',
+                            style: TextStyle(fontWeight: FontWeight.bold, color: c.onSurface, fontSize: 14),
+                          ),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SizedBox(height: 2),
+                              Text(
+                                item.tanggal.toLocal().toString().split('.')[0],
+                                style: TextStyle(fontSize: 12, color: c.onSurfaceVariant),
+                              ),
+                              if (item.keterangan != null && item.keterangan!.isNotEmpty) ...[
+                                const SizedBox(height: 2),
+                                Text(
+                                  item.keterangan!,
+                                  style: TextStyle(fontSize: 12, color: c.onSurfaceVariant),
+                                ),
+                              ]
+                            ],
+                          ),
+                          trailing: Text(
+                            (isBayar ? '-' : '+') + _formatCurrency(item.jumlah),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: isBayar ? c.statusSuccess : c.statusCritical,
+                              fontSize: 14,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  );
+                },
               ),
-              
               const SizedBox(height: 100), // padding for bottom button
             ],
           ),
@@ -396,32 +576,63 @@ class _BayarUtangScreenState extends State<BayarUtangScreen> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   elevation: 4,
                 ),
-                onPressed: () {
-                  if (_jumlahBayar <= 0) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Masukkan jumlah bayar yang valid')),
-                    );
-                    return;
-                  }
-                  
-                  // Simulate success
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Pembayaran berhasil disimpan!')),
-                  );
-                  Navigator.pop(context); // Go back
-                },
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.save),
-                    SizedBox(width: 8),
-                    Text('Simpan Pembayaran', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                  ],
-                ),
+                onPressed: _isSaving ? null : _simpan,
+                child: _isSaving 
+                  ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(_jenisTransaksi == 'bayar' ? Icons.save : Icons.add_shopping_cart),
+                        const SizedBox(width: 8),
+                        Text('Simpan Transaksi', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      ],
+                    ),
               ),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildTypeToggle(BuildContext context, String label, String type, IconData icon) {
+    final c = AppColors.of(context);
+    final isSelected = _jenisTransaksi == type;
+    
+    return InkWell(
+      onTap: () {
+        setState(() {
+          _jenisTransaksi = type;
+        });
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected ? c.primaryContainer : c.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected ? c.primary : c.outlineVariant,
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Column(
+          children: [
+            Icon(
+              icon,
+              color: isSelected ? c.onPrimaryContainer : c.onSurfaceVariant,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: isSelected ? c.onPrimaryContainer : c.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

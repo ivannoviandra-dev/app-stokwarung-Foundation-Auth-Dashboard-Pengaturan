@@ -47,9 +47,13 @@ class SettingsNotifier extends Notifier<SettingsState> {
     final user = Supabase.instance.client.auth.currentUser;
     final metadata = user?.userMetadata;
     final namaToko = (metadata?['nama_toko'] as String?)?.trim() ?? '';
+    final alamat = (metadata?['alamat'] as String?)?.trim() ?? '';
+    final nomorHp = (metadata?['nomor_hp'] as String?)?.trim() ?? '';
     
     return SettingsState(
       namaToko: namaToko.isNotEmpty ? namaToko : 'Toko Saya',
+      alamat: alamat,
+      nomorHp: nomorHp,
     );
   }
 
@@ -59,17 +63,36 @@ class SettingsNotifier extends Notifier<SettingsState> {
       await Supabase.instance.client.auth.updateUser(
         UserAttributes(data: {'nama_toko': value}),
       );
+      
+      // Panggil RPC untuk memperbarui metadata kasir
+      await Supabase.instance.client.rpc('update_kasir_nama_toko', params: {
+        'p_nama_toko': value,
+      });
     } catch (e) {
       print('Error saving nama toko: $e');
     }
   }
 
-  void updateAlamat(String value) {
+  Future<void> updateAlamat(String value) async {
     state = state.copyWith(alamat: value);
+    try {
+      await Supabase.instance.client.auth.updateUser(
+        UserAttributes(data: {'alamat': value}),
+      );
+    } catch (e) {
+      print('Error saving alamat: $e');
+    }
   }
 
-  void updateNomorHp(String value) {
+  Future<void> updateNomorHp(String value) async {
     state = state.copyWith(nomorHp: value);
+    try {
+      await Supabase.instance.client.auth.updateUser(
+        UserAttributes(data: {'nomor_hp': value}),
+      );
+    } catch (e) {
+      print('Error saving nomor hp: $e');
+    }
   }
 
   void toggleDarkMode(bool value) {
@@ -90,12 +113,26 @@ class SettingsNotifier extends Notifier<SettingsState> {
     state = state.copyWith(selectedExpiry: current);
   }
 
-  bool changePassword(String oldPassword, String newPassword) {
-    if (oldPassword == state.password) {
-      state = state.copyWith(password: newPassword);
+  Future<bool> changePassword(String oldPassword, String newPassword) async {
+    try {
+      final email = Supabase.instance.client.auth.currentUser?.email;
+      if (email == null) return false;
+      
+      // Verify old password by attempting to sign in
+      await Supabase.instance.client.auth.signInWithPassword(
+        email: email,
+        password: oldPassword,
+      );
+
+      // If successful, update the password
+      await Supabase.instance.client.auth.updateUser(
+        UserAttributes(password: newPassword),
+      );
       return true;
+    } catch (e) {
+      print('Error changing password: $e');
+      return false;
     }
-    return false;
   }
 }
 

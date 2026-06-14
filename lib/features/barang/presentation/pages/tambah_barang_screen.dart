@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../data/models/barang_model.dart';
 import '../providers/barang_provider.dart';
-
+import 'package:simple_barcode_scanner/simple_barcode_scanner.dart';
 class TambahBarangScreen extends ConsumerStatefulWidget {
   const TambahBarangScreen({super.key});
 
@@ -304,7 +304,19 @@ class _TambahBarangScreenState extends ConsumerState<TambahBarangScreen> {
                       hintText: 'Scan atau ketik kode',
                       suffixIcon: IconButton(
                         icon: Icon(Icons.qr_code_scanner, color: c.primary),
-                        onPressed: () {},
+                        onPressed: () async {
+                          var res = await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const SimpleBarcodeScannerPage(),
+                            ),
+                          );
+                          if (res is String && res != '-1' && res.isNotEmpty) {
+                            setState(() {
+                              _barcodeController.text = res;
+                            });
+                          }
+                        },
                       ),
                     ),
                     const SizedBox(height: 16),
