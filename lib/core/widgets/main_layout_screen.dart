@@ -1,16 +1,55 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../features/dashboard/presentation/providers/dashboard_provider.dart';
+import '../services/notification_service.dart';
 
-class MainLayoutScreen extends StatelessWidget {
+class MainLayoutScreen extends ConsumerStatefulWidget {
   const MainLayoutScreen({super.key, required this.navigationShell});
   
   final StatefulNavigationShell navigationShell;
 
+  @override
+  ConsumerState<MainLayoutScreen> createState() => _MainLayoutScreenState();
+}
+
+class _MainLayoutScreenState extends ConsumerState<MainLayoutScreen> {
+  bool _notificationsSent = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Kirim notifikasi otomatis saat pertama kali masuk ke dashboard
+    _triggerAutoNotifications();
+  }
+
+  Future<void> _triggerAutoNotifications() async {
+    if (_notificationsSent) return;
+    _notificationsSent = true;
+
+    // Tunggu provider siap
+    await Future.delayed(const Duration(seconds: 2));
+    if (!mounted) return;
+
+    final dashboard = ref.read(dashboardProvider);
+    if (dashboard.perluPerhatian.isEmpty) return;
+
+    final alerts = dashboard.perluPerhatian.map((item) {
+      return <String, String>{
+        'title': item.title,
+        'body': item.subtitle,
+        'type': item.type,
+      };
+    }).toList();
+
+    await NotificationService().sendAlertNotifications(alerts: alerts);
+  }
+
   void _goBranch(int index) {
-    navigationShell.goBranch(
+    widget.navigationShell.goBranch(
       index,
-      initialLocation: index == navigationShell.currentIndex,
+      initialLocation: index == widget.navigationShell.currentIndex,
     );
   }
 
@@ -19,9 +58,9 @@ class MainLayoutScreen extends StatelessWidget {
     final c = AppColors.of(context);
 
     return Scaffold(
-      body: navigationShell,
+      body: widget.navigationShell,
       bottomNavigationBar: NavigationBar(
-        selectedIndex: navigationShell.currentIndex,
+        selectedIndex: widget.navigationShell.currentIndex,
         onDestinationSelected: _goBranch,
         backgroundColor: c.navBarBg,
         indicatorColor: c.navIndicator,
