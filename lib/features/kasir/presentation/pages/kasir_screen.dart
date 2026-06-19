@@ -3,7 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'struk_pembayaran_screen.dart';
+import '../../../transaksi/data/models/transaksi_model.dart';
 import '../../../barang/presentation/providers/barang_provider.dart';
+import '../../../transaksi/presentation/providers/transaksi_provider.dart';
+import '../../../utang/presentation/providers/utang_provider.dart';
+import '../../../reminder/presentation/pages/notifications_screen.dart';
+import 'package:simple_barcode_scanner/simple_barcode_scanner.dart';
 
 class KasirScreen extends ConsumerStatefulWidget {
   const KasirScreen({super.key});
@@ -31,7 +36,7 @@ class _KasirScreenState extends ConsumerState<KasirScreen> {
     return 'Rp$str';
   }
 
-  void _prosesPembayaran(String metode) {
+  Future<void> _prosesPembayaran(String metode, {String? pelangganId, String? namaPelanggan}) async {
     if (_keranjang.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Keranjang kosong!')),
@@ -41,16 +46,56 @@ class _KasirScreenState extends ConsumerState<KasirScreen> {
     final keranjangCopy = List<Map<String, dynamic>>.from(
         _keranjang.map((e) => Map<String, dynamic>.from(e)));
     final total = _totalPrice;
-    setState(() => _keranjang.clear());
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => StrukPembayaranScreen(
-          keranjang: keranjangCopy, total: total, metode: metode,
+    // Kurangi stok barang
+    final barangNotifier = ref.read(barangProvider.notifier);
+    for (var item in keranjangCopy) {
+      if (item['id'] != null) {
+        barangNotifier.kurangiStok(item['id'], item['qty'] as int);
+      }
+    }
+
+    Transaksi? savedTransaksi;
+    try {
+      savedTransaksi = await ref.read(transaksiProvider.notifier).simpanTransaksi(
+        keranjang: keranjangCopy,
+        total: total,
+        metode: metode,
+        namaPelanggan: namaPelanggan,
+      );
+
+      if (metode == 'Utang' && pelangganId != null) {
+        await ref.read(utangProvider.notifier).tambahCatatanUtang(
+          pelangganId: pelangganId,
+          jumlah: total,
+          jenis: 'utang',
+          keterangan: 'Transaksi Pembelian',
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal memproses transaksi: $e')),
+        );
+      }
+      return; // Stop here if failed
+    }
+
+    if (mounted) {
+      setState(() => _keranjang.clear());
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => StrukPembayaranScreen(
+            keranjang: keranjangCopy,
+            total: total,
+            metode: metode,
+            transaksiId: savedTransaksi?.id,
+          ),
         ),
-      ),
-    );
+      );
+    }
   }
 
   void _updateQty(int index, int delta) {
@@ -58,6 +103,167 @@ class _KasirScreenState extends ConsumerState<KasirScreen> {
       _keranjang[index]['qty'] += delta;
       if (_keranjang[index]['qty'] <= 0) _keranjang.removeAt(index);
     });
+  }
+
+  void _showCatatUtangSheet() {
+    if (_keranjang.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Keranjang kosong!')),
+      );
+      return;
+    }
+
+    final utangState = ref.read(utangProvider);
+    final pelangganList = utangState.pelangganList;
+    final c = AppColors.of(context);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) {
+        return DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.6,
+          maxChildSize: 0.9,
+          builder: (_, scrollController) {
+            return Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                children: [
+                  Container(
+                    width: 40, height: 4,
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(color: c.outlineVariant, borderRadius: BorderRadius.circular(2)),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Pilih Pelanggan', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: c.darkText)),
+                      TextButton.icon(
+                        onPressed: () {
+                          Navigator.pop(ctx);
+                          _showTambahPelangganUtangDialog();
+                        },
+                        icon: const Icon(Icons.person_add, size: 18),
+                        label: const Text('Pelanggan Baru'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  if (pelangganList.isEmpty)
+                    Expanded(
+                      child: Center(
+                        child: Text('Belum ada pelanggan.\nTambahkan pelanggan di menu Buku Utang terlebih dahulu.', textAlign: TextAlign.center, style: TextStyle(color: c.greyText)),
+                      ),
+                    )
+                  else
+                    Expanded(
+                      child: ListView.separated(
+                        controller: scrollController,
+                        itemCount: pelangganList.length,
+                        separatorBuilder: (_, __) => const Divider(),
+                        itemBuilder: (ctx2, i) {
+                          final p = pelangganList[i];
+                          return ListTile(
+                            leading: CircleAvatar(backgroundColor: c.primaryContainer, child: Text(p.nama.isNotEmpty ? p.nama[0].toUpperCase() : '?', style: TextStyle(color: c.onPrimaryContainer))),
+                            title: Text(p.nama, style: TextStyle(fontWeight: FontWeight.bold, color: c.onSurface)),
+                            subtitle: p.noHp != null ? Text(p.noHp!) : null,
+                            onTap: () {
+                              Navigator.pop(ctx);
+                              _prosesPembayaran('Utang', pelangganId: p.id, namaPelanggan: p.nama);
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showTambahPelangganUtangDialog() {
+    final c = AppColors.of(context);
+    final namaController = TextEditingController();
+    final hpController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Tambah Pelanggan Baru'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: namaController,
+              decoration: InputDecoration(
+                labelText: 'Nama Pelanggan',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              autofocus: true,
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: hpController,
+              decoration: InputDecoration(
+                labelText: 'Nomor HP (Opsional)',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              keyboardType: TextInputType.phone,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Batal', style: TextStyle(color: c.onSurfaceVariant)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: c.primary,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () async {
+              final nama = namaController.text.trim();
+              if (nama.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Nama pelanggan harus diisi!')),
+                );
+                return;
+              }
+
+              // Tutup dialog
+              Navigator.pop(ctx);
+
+              // Tampilkan loading (opsional, tapi karena cepat kita langsung panggil)
+              try {
+                final newPelanggan = await ref.read(utangProvider.notifier).tambahPelanggan(
+                  nama,
+                  0, // Nominal awal 0 karena utangnya dicatat dari total belanja
+                  noHp: hpController.text.trim(),
+                );
+                if (newPelanggan != null) {
+                  // Langsung proses pembayaran utang
+                  _prosesPembayaran('Utang', pelangganId: newPelanggan.id, namaPelanggan: newPelanggan.nama);
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Gagal menambah pelanggan: $e')),
+                  );
+                }
+              }
+            },
+            child: const Text('Simpan & Catat Utang'),
+          ),
+        ],
+      ),
+    );
   }
 
   int get _totalPrice =>
@@ -87,7 +293,12 @@ class _KasirScreenState extends ConsumerState<KasirScreen> {
         actions: [
           IconButton(
             icon: Icon(Icons.notifications_none, color: c.onSurface),
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+              );
+            },
           ),
           const SizedBox(width: 8),
         ],
@@ -141,7 +352,13 @@ class _KasirScreenState extends ConsumerState<KasirScreen> {
                               if (index >= 0) {
                                 _keranjang[index]['qty'] += 1;
                               } else {
-                                _keranjang.add({'nama': barang.nama, 'harga': barang.harga, 'qty': 1});
+                                _keranjang.add({
+                                  'id': barang.id,
+                                  'nama': barang.nama, 
+                                  'harga': barang.harga, 
+                                  'harga_modal': barang.hargaBeli,
+                                  'qty': 1
+                                });
                               }
                             });
                           } else {
@@ -167,11 +384,49 @@ class _KasirScreenState extends ConsumerState<KasirScreen> {
                         borderRadius: const BorderRadius.only(
                           topRight: Radius.circular(8), bottomRight: Radius.circular(8),
                         ),
-                        onTap: () {
-                          // Dummy action untuk tombol scan QR, sebaiknya memunculkan dialog/camera scanner
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Fitur scan QR belum diimplementasi sepenuhnya')),
+                        onTap: () async {
+                          final res = await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const SimpleBarcodeScannerPage(),
+                            ),
                           );
+                          if (res is String && res != '-1') {
+                            _searchController.text = res;
+                            final value = res;
+                            if (value.trim().isNotEmpty) {
+                              final semuaBarang = ref.read(barangProvider).semuaBarang;
+                              final foundBarang = semuaBarang.where((b) => 
+                                b.nama.toLowerCase() == value.trim().toLowerCase() || 
+                                (b.barcode != null && b.barcode == value.trim())
+                              ).toList();
+
+                              if (foundBarang.isNotEmpty) {
+                                final barang = foundBarang.first;
+                                setState(() {
+                                  final index = _keranjang.indexWhere((item) =>
+                                      item['nama'].toString().toLowerCase() ==
+                                          barang.nama.toLowerCase());
+                                  if (index >= 0) {
+                                    _keranjang[index]['qty'] += 1;
+                                  } else {
+                                    _keranjang.add({
+                                      'id': barang.id,
+                                      'nama': barang.nama, 
+                                      'harga': barang.harga, 
+                                      'harga_modal': barang.hargaBeli,
+                                      'qty': 1
+                                    });
+                                  }
+                                });
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Barang tidak ditemukan!')),
+                                );
+                              }
+                              _searchController.clear();
+                            }
+                          }
                         },
                         child: Icon(Icons.qr_code_scanner, color: c.primary),
                       ),
@@ -384,7 +639,7 @@ class _KasirScreenState extends ConsumerState<KasirScreen> {
                   minimumSize: const Size(double.infinity, 48),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                 ),
-                onPressed: () {},
+                onPressed: _showCatatUtangSheet,
                 child: const Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                   Icon(Icons.menu_book), SizedBox(width: 8),
                   Text('Catat Utang', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),

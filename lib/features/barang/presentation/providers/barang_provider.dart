@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../data/models/barang_model.dart';
+import '../../../../core/services/notification_service.dart';
+import '../../../pengaturan/presentation/providers/settings_provider.dart';
 
 // ─── State class ───────────────────────────────────────────────────────────────
 class BarangState {
@@ -64,20 +66,70 @@ class BarangNotifier extends Notifier<BarangState> {
   Future<void> fetchBarang() async {
     try {
       state = state.copyWith(isLoading: true);
-      // Ambil data dari tabel barang, filter berdasarkan user_id agar akun baru kosong
-      final userId = _supabase.auth.currentUser?.id;
-      if (userId == null) {
+      final user = _supabase.auth.currentUser;
+      if (user == null) {
         state = state.copyWith(semuaBarang: [], isLoading: false);
         return;
       }
+
+      // Jika user adalah kasir, ambil barang milik owner-nya
+      // Jika user adalah owner, ambil barang miliknya sendiri
+      final userRole = user.userMetadata?['role'] as String?;
+      final String targetUserId;
+      if (userRole == 'kasir') {
+        final ownerId = user.userMetadata?['owner_id'] as String?;
+        if (ownerId == null) {
+          state = state.copyWith(semuaBarang: [], isLoading: false);
+          return;
+        }
+        targetUserId = ownerId;
+      } else {
+        targetUserId = user.id;
+      }
       
-      final response = await _supabase.from('barang').select().eq('user_id', userId);
+      final response = await _supabase.from('barang').select().eq('user_id', targetUserId);
       final List<Barang> loadedBarang = (response as List).map((json) => Barang.fromJson(json)).toList();
       
       state = state.copyWith(semuaBarang: loadedBarang, isLoading: false);
+
+      // Cek kedaluwarsa setelah load
+      _checkExpiryNotifications(loadedBarang);
     } catch (e) {
       print('Error fetching barang: $e');
       state = state.copyWith(isLoading: false);
+    }
+  }
+
+  void _checkExpiryNotifications(List<Barang> barangList) {
+    final settings = ref.read(settingsProvider);
+    final selectedExpiry = settings.selectedExpiry; 
+    
+    final expiryDays = <int>[];
+    if (selectedExpiry.contains('H-7')) expiryDays.add(7);
+    if (selectedExpiry.contains('H-3')) expiryDays.add(3);
+    if (selectedExpiry.contains('H-1')) expiryDays.add(1);
+    
+    if (expiryDays.isEmpty) return;
+    final maxExpiryDays = expiryDays.reduce((a, b) => a > b ? a : b);
+
+    for (var barang in barangList) {
+      if (barang.tanggalKedaluwarsa != null) {
+        final daysToExpire = barang.tanggalKedaluwarsa!.difference(DateTime.now()).inDays;
+        
+        if (daysToExpire < 0) {
+          NotificationService().showNotification(
+            id: (barang.id.hashCode + 1), // Beda id dengan notif stok
+            title: 'Sudah Kedaluwarsa!',
+            body: '${barang.nama} telah kedaluwarsa ${daysToExpire.abs()} hari lalu.',
+          );
+        } else if (daysToExpire <= maxExpiryDays) {
+          NotificationService().showNotification(
+            id: (barang.id.hashCode + 1),
+            title: 'Hampir Kedaluwarsa',
+            body: '${barang.nama} kedaluwarsa dalam $daysToExpire hari.',
+          );
+        }
+      }
     }
   }
 
@@ -150,6 +202,48 @@ class BarangNotifier extends Notifier<BarangState> {
       print('Error updating barang: $e');
       state = state.copyWith(isLoading: false);
       rethrow;
+    }
+  }
+
+  Future<void> kurangiStok(String id, int qty) async {
+    try {
+      final index = state.semuaBarang.indexWhere((b) => b.id == id);
+      if (index == -1) return;
+      
+      final barang = state.semuaBarang[index];
+      final sisaStok = barang.stok - qty;
+      
+      // Optimistic UI update
+      final updatedLocal = barang.copyWith(stok: sisaStok);
+      state = state.copyWith(
+        semuaBarang: state.semuaBarang.map((b) => b.id == id ? updatedLocal : b).toList()
+      );
+
+      // Trigger Notifikasi Stok Menipis
+      final settings = ref.read(settingsProvider);
+      final batasStok = barang.stokMinimum > 0 ? barang.stokMinimum : settings.stokMinimum;
+      
+      if (sisaStok <= 0) {
+        NotificationService().showNotification(
+          id: id.hashCode,
+          title: 'Stok Habis: ${barang.nama}',
+          body: 'Segera restock, stok barang ini sudah habis (0).',
+        );
+      } else if (sisaStok <= batasStok && barang.stok > batasStok) {
+        // Hanya notif jika stok baru saja menembus batas bawah
+        NotificationService().showNotification(
+          id: id.hashCode,
+          title: 'Stok Menipis: ${barang.nama}',
+          body: 'Sisa stok tinggal $sisaStok (Batas minimum: $batasStok).',
+        );
+      }
+
+      // Update di database
+      await _supabase.from('barang').update({'stok': sisaStok}).eq('id', id);
+    } catch (e) {
+      print('Error kurangi stok: $e');
+      // Jika terjadi error, idealnya me-rollback data lokal di sini,
+      // tapi untuk sementara minimal mencatat error.
     }
   }
 

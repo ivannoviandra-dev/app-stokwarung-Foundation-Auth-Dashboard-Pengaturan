@@ -263,7 +263,66 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             Align(
                               alignment: Alignment.centerRight,
                               child: TextButton(
-                                onPressed: () {},
+                                onPressed: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) {
+                                      final resetEmailController = TextEditingController();
+                                      return AlertDialog(
+                                        title: const Text('Reset Password'),
+                                        content: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            const Text('Masukkan email Anda untuk menerima tautan reset password.'),
+                                            const SizedBox(height: 16),
+                                            TextField(
+                                              controller: resetEmailController,
+                                              decoration: InputDecoration(
+                                                hintText: 'Email Anda',
+                                                border: OutlineInputBorder(
+                                                  borderRadius: BorderRadius.circular(8),
+                                                ),
+                                              ),
+                                              keyboardType: TextInputType.emailAddress,
+                                            ),
+                                          ],
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () => Navigator.pop(context),
+                                            child: const Text('Batal'),
+                                          ),
+                                          ElevatedButton(
+                                            onPressed: () async {
+                                              final email = resetEmailController.text;
+                                              if (email.isNotEmpty) {
+                                                final success = await ref.read(authProvider.notifier).resetPassword(email);
+                                                if (context.mounted) {
+                                                  Navigator.pop(context);
+                                                  ScaffoldMessenger.of(context).showSnackBar(
+                                                    SnackBar(
+                                                      content: Text(
+                                                        success 
+                                                          ? 'Tautan reset password telah dikirim ke email Anda.' 
+                                                          : ref.read(authProvider).error ?? 'Gagal mengirim email reset password.',
+                                                      ),
+                                                      backgroundColor: success ? Colors.green : Colors.red,
+                                                    ),
+                                                  );
+                                                }
+                                              }
+                                            },
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: primaryGreen,
+                                              foregroundColor: Colors.white,
+                                            ),
+                                            child: const Text('Kirim'),
+                                          ),
+                                        ],
+                                      );
+                                    },
+                                  );
+                                },
                                 style: TextButton.styleFrom(
                                   padding: EdgeInsets.zero,
                                   minimumSize: Size.zero,

@@ -13,8 +13,31 @@ import '../../features/laporan/presentation/pages/laporan_screen.dart';
 import '../../features/pengaturan/presentation/pages/pengaturan_screen.dart';
 import '../widgets/main_layout_screen.dart';
 
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 final appRouter = GoRouter(
   initialLocation: '/login',
+  redirect: (context, state) {
+    final auth = Supabase.instance.client.auth;
+    final session = auth.currentSession;
+    final user = auth.currentUser;
+    final isLoggingIn = state.matchedLocation == '/login' || state.matchedLocation == '/register';
+
+    if (session == null && !isLoggingIn) {
+      return '/login';
+    }
+
+    if (session != null && isLoggingIn) {
+      final role = user?.userMetadata?['role'];
+      if (role == 'owner') {
+        return '/dashboard_owner';
+      } else {
+        return '/dashboard_kasir';
+      }
+    }
+
+    return null;
+  },
   routes: [
     GoRoute(
       path: '/login',

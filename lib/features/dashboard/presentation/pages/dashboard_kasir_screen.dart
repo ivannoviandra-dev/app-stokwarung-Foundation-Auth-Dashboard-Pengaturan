@@ -6,6 +6,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../features/kasir/presentation/pages/kasir_screen.dart';
 import '../../../../features/utang/presentation/pages/buku_utang_screen.dart';
 import '../../../../features/pengaturan/presentation/pages/pengaturan_kasir_screen.dart';
+import '../../../../features/reminder/presentation/pages/notifications_screen.dart';
+import '../../../../features/transaksi/presentation/providers/transaksi_provider.dart';
+import '../providers/dashboard_provider.dart';
 
 class DashboardKasirScreen extends ConsumerStatefulWidget {
   const DashboardKasirScreen({super.key});
@@ -18,10 +21,34 @@ class _DashboardKasirScreenState extends ConsumerState<DashboardKasirScreen> {
   int _selectedIndex = 0;
 
   @override
+  void initState() {
+    super.initState();
+    _refreshSession();
+  }
+
+  Future<void> _refreshSession() async {
+    try {
+      await Supabase.instance.client.auth.refreshSession();
+      if (mounted) setState(() {});
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  String _formatCurrency(int amount) {
+    final str = amount.toString().replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+      (Match m) => '${m[1]}.',
+    );
+    return 'Rp$str';
+  }
+
+  @override
   Widget build(BuildContext context) {
     final c = AppColors.of(context);
     final userMetadata = Supabase.instance.client.auth.currentUser?.userMetadata;
     final namaToko = userMetadata?['nama_toko'] as String? ?? 'Warung Saya';
+    final dashboardData = ref.watch(dashboardProvider);
 
     return Scaffold(
       backgroundColor: c.background,
@@ -57,11 +84,11 @@ class _DashboardKasirScreenState extends ConsumerState<DashboardKasirScreen> {
                   const SizedBox(height: 24),
 
                   // Bento Grid
-                  _buildBentoGrid(c),
+                  _buildBentoGrid(c, dashboardData),
                   const SizedBox(height: 24),
 
                   // Recent Activity Feed
-                  _buildRecentActivity(c),
+                  _buildRecentActivity(c, ref),
                   const SizedBox(height: 24),
 
                   // Tip Card
@@ -122,7 +149,12 @@ class _DashboardKasirScreenState extends ConsumerState<DashboardKasirScreen> {
           ),
           child: IconButton(
             icon: Icon(Icons.notifications_none, color: c.greyText, size: 20),
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+              );
+            },
           ),
         ),
       ],
@@ -181,7 +213,7 @@ class _DashboardKasirScreenState extends ConsumerState<DashboardKasirScreen> {
     );
   }
 
-  Widget _buildBentoGrid(AppColors c) {
+  Widget _buildBentoGrid(AppColors c, DashboardData data) {
     return Column(
       children: [
         // Transaksi Hari Ini
@@ -214,9 +246,9 @@ class _DashboardKasirScreenState extends ConsumerState<DashboardKasirScreen> {
                       RichText(
                         text: TextSpan(
                           style: TextStyle(color: c.darkText),
-                          children: const [
-                            TextSpan(text: '0 ', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-                            TextSpan(text: 'Pesanan', style: TextStyle(fontSize: 14)),
+                          children: [
+                            TextSpan(text: '${data.totalTransaksi} ', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                            const TextSpan(text: 'Pesanan', style: TextStyle(fontSize: 14)),
                           ],
                         ),
                       ),
@@ -231,7 +263,7 @@ class _DashboardKasirScreenState extends ConsumerState<DashboardKasirScreen> {
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
-                  '+Rp0',
+                  '+${_formatCurrency(data.totalPenjualanHariIni)}',
                   style: TextStyle(color: c.statusSuccess, fontSize: 12, fontWeight: FontWeight.bold),
                 ),
               ),
@@ -314,7 +346,10 @@ class _DashboardKasirScreenState extends ConsumerState<DashboardKasirScreen> {
     );
   }
 
-  Widget _buildRecentActivity(AppColors c) {
+  Widget _buildRecentActivity(AppColors c, WidgetRef ref) {
+    final transaksiState = ref.watch(transaksiProvider);
+    final riwayat = transaksiState.transaksiHariIni.take(3).toList();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -339,23 +374,47 @@ class _DashboardKasirScreenState extends ConsumerState<DashboardKasirScreen> {
           ],
         ),
         const SizedBox(height: 12),
-        Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: c.cardColor,
-            border: Border.all(color: c.outlineVariant),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Center(
-            child: Column(
-              children: [
-                Icon(Icons.receipt_long_outlined, size: 40, color: c.outlineVariant),
-                const SizedBox(height: 8),
-                Text('Belum ada aktivitas', style: TextStyle(color: c.greyText, fontSize: 14)),
-              ],
+        if (riwayat.isEmpty)
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: c.cardColor,
+              border: Border.all(color: c.outlineVariant),
+              borderRadius: BorderRadius.circular(12),
             ),
+            child: Center(
+              child: Column(
+                children: [
+                  Icon(Icons.receipt_long_outlined, size: 40, color: c.outlineVariant),
+                  const SizedBox(height: 8),
+                  Text('Belum ada aktivitas', style: TextStyle(color: c.greyText, fontSize: 14)),
+                ],
+              ),
+            ),
+          )
+        else
+          Column(
+            children: riwayat.map((t) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8.0),
+                child: _buildActivityItem(
+                  c: c,
+                  title: 'Transaksi #${t.id.substring(0, 5)}',
+                  timeInfo: '${t.createdAt.toLocal().hour.toString().padLeft(2, '0')}:${t.createdAt.toLocal().minute.toString().padLeft(2, '0')} • ${t.metode}',
+                  amount: _formatCurrency(t.total),
+                  icon: Icons.receipt_long_outlined,
+                  amountColor: c.statusSuccess,
+                  onTap: () => _showDetailTransaksi(
+                    context, c,
+                    'Transaksi #${t.id.substring(0, 5)}',
+                    '${t.createdAt.toLocal().hour.toString().padLeft(2, '0')}:${t.createdAt.toLocal().minute.toString().padLeft(2, '0')}',
+                    t.metode,
+                    _formatCurrency(t.total),
+                  ),
+                ),
+              );
+            }).toList(),
           ),
-        ),
       ],
     );
   }
@@ -462,7 +521,17 @@ class _DashboardKasirScreenState extends ConsumerState<DashboardKasirScreen> {
   // ─── Riwayat Transaksi Bottom Sheet ───────────────────────────────
   void _showRiwayatSheet(BuildContext context) {
     final c = AppColors.of(context);
-    final List<Map<String, dynamic>> riwayat = [];
+    final transaksiState = ref.watch(transaksiProvider);
+    final riwayat = transaksiState.transaksiHariIni.map((t) {
+      return {
+        'title': 'Transaksi #${t.id.substring(0, 5)}',
+        'time': '${t.createdAt.toLocal().hour.toString().padLeft(2, '0')}:${t.createdAt.toLocal().minute.toString().padLeft(2, '0')}',
+        'metode': t.metode,
+        'amount': _formatCurrency(t.total),
+        'icon': Icons.receipt,
+        'color': c.statusSuccess,
+      };
+    }).toList();
 
     showModalBottomSheet(
       context: context,

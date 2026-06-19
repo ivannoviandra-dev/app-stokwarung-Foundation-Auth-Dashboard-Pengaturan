@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/routes/app_router.dart';
+import 'core/services/notification_service.dart';
 import 'features/pengaturan/presentation/providers/settings_provider.dart';
 
 Future<void> main() async {
@@ -11,6 +12,9 @@ Future<void> main() async {
     url: 'https://exjkwvlaovwbejudhcwn.supabase.co',
     anonKey: 'sb_publishable_CTYudOAovz4tzo786gOnKg_xszgieRC',
   );
+
+  // Inisialisasi notifikasi lokal
+  await NotificationService().init();
 
   runApp(
     const ProviderScope(

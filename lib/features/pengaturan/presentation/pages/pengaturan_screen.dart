@@ -410,8 +410,10 @@ class PengaturanScreen extends ConsumerWidget {
                           Navigator.pop(ctx);
                           // Logout dari Supabase dan bersihkan state
                           await ref.read(authProvider.notifier).logout();
-                          // Invalidate barangProvider agar data di-refresh saat login akun lain
+                          // Invalidate providers agar data di-refresh saat login akun lain
+                          ref.invalidate(settingsProvider);
                           ref.invalidate(barangProvider);
+                          ref.invalidate(kasirProvider);
                           if (context.mounted) {
                             context.go('/login');
                           }
@@ -680,7 +682,7 @@ class PengaturanScreen extends ConsumerWidget {
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                 ),
-                onPressed: () {
+                onPressed: () async {
                   final oldPass = oldPassController.text;
                   final newPass = newPassController.text;
                   final confirmPass = confirmPassController.text;
@@ -721,19 +723,21 @@ class PengaturanScreen extends ConsumerWidget {
                     return;
                   }
 
-                  final success = ref.read(settingsProvider.notifier).changePassword(oldPass, newPass);
-                  Navigator.pop(ctx);
-
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(success
-                          ? 'Password berhasil diubah!'
-                          : 'Password lama salah'),
-                      backgroundColor: success ? c.primary : c.statusCritical,
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    ),
-                  );
+                  final success = await ref.read(settingsProvider.notifier).changePassword(oldPass, newPass);
+                  
+                  if (context.mounted) {
+                    Navigator.pop(ctx);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(success
+                            ? 'Password berhasil diubah!'
+                            : 'Password lama salah atau terjadi kesalahan'),
+                        backgroundColor: success ? c.primary : c.statusCritical,
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                    );
+                  }
                 },
                 child: const Text('Simpan'),
               ),
@@ -1027,6 +1031,16 @@ class PengaturanScreen extends ConsumerWidget {
                         if (nama.isEmpty || email.isEmpty || pass.isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text('Semua field harus diisi')),
+                          );
+                          return;
+                        }
+
+                        if (pass.length < 6) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Password minimal 6 karakter'),
+                              backgroundColor: Colors.red,
+                            ),
                           );
                           return;
                         }

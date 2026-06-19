@@ -1,17 +1,22 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../reminder/presentation/pages/notifications_screen.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../features/pengaturan/presentation/providers/settings_provider.dart';
 
-class StrukPembayaranScreen extends StatelessWidget {
+class StrukPembayaranScreen extends ConsumerWidget {
   final List<Map<String, dynamic>> keranjang;
   final int total;
   final String metode;
+  final String? transaksiId;
 
   const StrukPembayaranScreen({
     super.key,
     required this.keranjang,
     required this.total,
     required this.metode,
+    this.transaksiId,
   });
 
   String _formatCurrency(int amount) {
@@ -23,14 +28,17 @@ class StrukPembayaranScreen extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final c = AppColors.of(context);
-    final userMetadata = Supabase.instance.client.auth.currentUser?.userMetadata;
-    final namaToko = userMetadata?['nama_toko'] as String? ?? 'Warung Saya';
+    final settings = ref.watch(settingsProvider);
+    final namaToko = settings.namaToko.isNotEmpty ? settings.namaToko : 'Warung Saya';
+    final alamatToko = settings.alamat.isNotEmpty ? settings.alamat : 'Belum ada alamat di pengaturan';
     
     final date = DateTime.now();
     final dateString = "${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}";
-    final transactionId = "TX-${DateTime.now().millisecondsSinceEpoch.toString().substring(5)}";
+    final transactionIdDisplay = transaksiId != null 
+        ? "TX-${transaksiId!.replaceAll('-', '').substring(0, 8).toUpperCase()}" 
+        : "TX-${DateTime.now().millisecondsSinceEpoch.toString().substring(5)}";
 
     return Scaffold(
       backgroundColor: c.background,
@@ -60,7 +68,12 @@ class StrukPembayaranScreen extends StatelessWidget {
         actions: [
           IconButton(
             icon: Icon(Icons.notifications_none, color: c.onSurfaceVariant),
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+              );
+            },
           ),
         ],
         bottom: PreferredSize(
@@ -157,7 +170,7 @@ class StrukPembayaranScreen extends StatelessWidget {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  'JL. MELATI NO. 12, JAKARTA',
+                                  alamatToko,
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
                                     fontSize: 12,
@@ -181,7 +194,7 @@ class StrukPembayaranScreen extends StatelessWidget {
                                           style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: c.onSurfaceVariant),
                                         ),
                                         Text(
-                                          transactionId,
+                                          transactionIdDisplay,
                                           style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: c.onSurfaceVariant),
                                         ),
                                       ],
