@@ -90,11 +90,9 @@ class _ManajemenBarangScreenState extends ConsumerState<ManajemenBarangScreen> {
             heroTag: 'scan_fab',
             backgroundColor: primaryGreen,
             onPressed: () async {
-              var res = await Navigator.push(
+              var res = await SimpleBarcodeScanner.scanBarcode(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => const SimpleBarcodeScannerPage(cancelButtonText: 'Kembali'),
-                ),
+                cancelButtonText: 'Kembali',
               );
               if (res is String && res != '-1' && res.isNotEmpty) {
                 _searchController.text = res;

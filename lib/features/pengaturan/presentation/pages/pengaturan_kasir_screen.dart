@@ -104,14 +104,14 @@ class PengaturanKasirScreen extends ConsumerWidget {
                   const SizedBox(height: 4),
                   Text(
                     roleKasir.toUpperCase(),
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: onSurfaceVariant,
-                    ),
+                    style: TextStyle(fontSize: 14, color: onSurfaceVariant),
                   ),
                   const SizedBox(height: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: primaryContainer.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(16),
@@ -150,7 +150,10 @@ class PengaturanKasirScreen extends ConsumerWidget {
                 onTap: () => notifier.toggleDarkMode(!settings.darkMode),
                 borderRadius: BorderRadius.circular(12),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
                   child: Row(
                     children: [
                       Icon(Icons.dark_mode, color: primary),
@@ -168,8 +171,10 @@ class PengaturanKasirScreen extends ConsumerWidget {
                       Switch(
                         value: settings.darkMode,
                         onChanged: (val) => notifier.toggleDarkMode(val),
-                        activeColor: primaryContainer,
-                        activeTrackColor: primaryContainer.withValues(alpha: 0.4),
+                        activeThumbColor: primaryContainer,
+                        activeTrackColor: primaryContainer.withValues(
+                          alpha: 0.4,
+                        ),
                         inactiveThumbColor: Colors.white,
                         inactiveTrackColor: surfaceContainerHighest,
                       ),
@@ -263,19 +268,28 @@ class PengaturanKasirScreen extends ConsumerWidget {
                 showDialog(
                   context: context,
                   builder: (ctx) => AlertDialog(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                     title: const Text('Keluar Akun'),
-                    content: const Text('Apakah Anda yakin ingin keluar dari akun ini?'),
+                    content: const Text(
+                      'Apakah Anda yakin ingin keluar dari akun ini?',
+                    ),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(ctx),
-                        child: Text('Batal', style: TextStyle(color: onSurfaceVariant)),
+                        child: Text(
+                          'Batal',
+                          style: TextStyle(color: onSurfaceVariant),
+                        ),
                       ),
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: statusCritical,
                           foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                         ),
                         onPressed: () async {
                           Navigator.pop(ctx);
@@ -360,10 +374,7 @@ class PengaturanKasirScreen extends ConsumerWidget {
                 Expanded(
                   child: Text(
                     title,
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: c.onSurface,
-                    ),
+                    style: TextStyle(fontSize: 16, color: c.onSurface),
                   ),
                 ),
                 Icon(trailingIcon, color: c.outline),
@@ -371,8 +382,7 @@ class PengaturanKasirScreen extends ConsumerWidget {
             ),
           ),
         ),
-        if (showDivider)
-          Divider(height: 1, color: c.outlineVariant),
+        if (showDivider) Divider(height: 1, color: c.outlineVariant),
       ],
     );
   }
@@ -389,7 +399,9 @@ class PengaturanKasirScreen extends ConsumerWidget {
         builder: (ctx2, setDialogState) {
           return AlertDialog(
             backgroundColor: c.surfaceContainerLow,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
             title: Row(
               children: [
                 Icon(Icons.lock_outline, color: c.primary),
@@ -408,7 +420,9 @@ class PengaturanKasirScreen extends ConsumerWidget {
                       labelText: 'Password Lama',
                       filled: true,
                       fillColor: c.surfaceContainerHighest,
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                         borderSide: BorderSide(color: c.primary, width: 2),
@@ -423,7 +437,9 @@ class PengaturanKasirScreen extends ConsumerWidget {
                       labelText: 'Password Baru',
                       filled: true,
                       fillColor: c.surfaceContainerHighest,
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                         borderSide: BorderSide(color: c.primary, width: 2),
@@ -438,7 +454,9 @@ class PengaturanKasirScreen extends ConsumerWidget {
                       labelText: 'Konfirmasi Password Baru',
                       filled: true,
                       fillColor: c.surfaceContainerHighest,
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                         borderSide: BorderSide(color: c.primary, width: 2),
@@ -451,47 +469,69 @@ class PengaturanKasirScreen extends ConsumerWidget {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx),
-                child: Text('Batal', style: TextStyle(color: c.onSurfaceVariant)),
+                child: Text(
+                  'Batal',
+                  style: TextStyle(color: c.onSurfaceVariant),
+                ),
               ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: c.primary,
                   foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
                 onPressed: () async {
                   final oldPass = oldPassController.text;
                   final newPass = newPassController.text;
                   final confirmPass = confirmPassController.text;
 
-                  if (oldPass.isEmpty || newPass.isEmpty || confirmPass.isEmpty) {
+                  if (oldPass.isEmpty ||
+                      newPass.isEmpty ||
+                      confirmPass.isEmpty) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: const Text('Semua field harus diisi'), backgroundColor: c.statusCritical),
+                      SnackBar(
+                        content: const Text('Semua field harus diisi'),
+                        backgroundColor: c.statusCritical,
+                      ),
                     );
                     return;
                   }
 
                   if (newPass != confirmPass) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: const Text('Password baru tidak sama'), backgroundColor: c.statusCritical),
+                      SnackBar(
+                        content: const Text('Password baru tidak sama'),
+                        backgroundColor: c.statusCritical,
+                      ),
                     );
                     return;
                   }
 
                   if (newPass.length < 6) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: const Text('Password minimal 6 karakter'), backgroundColor: c.statusCritical),
+                      SnackBar(
+                        content: const Text('Password minimal 6 karakter'),
+                        backgroundColor: c.statusCritical,
+                      ),
                     );
                     return;
                   }
 
-                  final success = await ref.read(settingsProvider.notifier).changePassword(oldPass, newPass);
-                  
+                  final success = await ref
+                      .read(settingsProvider.notifier)
+                      .changePassword(oldPass, newPass);
+
                   if (context.mounted) {
                     Navigator.pop(ctx);
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text(success ? 'Password berhasil diubah!' : 'Password lama salah atau terjadi kesalahan'),
+                        content: Text(
+                          success
+                              ? 'Password berhasil diubah!'
+                              : 'Password lama salah atau terjadi kesalahan',
+                        ),
                         backgroundColor: success ? c.primary : c.statusCritical,
                       ),
                     );

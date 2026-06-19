@@ -24,7 +24,7 @@ class NotificationService {
       iOS: iosSettings,
     );
 
-    await _plugin.initialize(initSettings);
+    await _plugin.initialize(settings: initSettings);
     _isInitialized = true;
 
     // Request permission for Android 13+
@@ -66,7 +66,7 @@ class NotificationService {
       iOS: iosDetails,
     );
 
-    await _plugin.show(id, title, body, details);
+    await _plugin.show(id: id, title: title, body: body, notificationDetails: details);
   }
 
   /// Kirim notifikasi batch untuk semua peringatan stok & kedaluwarsa

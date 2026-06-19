@@ -107,6 +107,7 @@ class _KasirScreenState extends ConsumerState<KasirScreen> {
 
       final redirectUrl = snapResult['redirect_url']!;
 
+      if (!mounted) return;
       // 2. Buka WebView Midtrans
       final paymentStatus = await Navigator.push<MidtransPaymentStatus>(
         context,
@@ -234,7 +235,7 @@ class _KasirScreenState extends ConsumerState<KasirScreen> {
                         namaPelanggan: nama,
                       );
 
-                      if (mounted) {
+                      if (context.mounted) {
                         setState(() => _keranjang.clear());
                         Navigator.pop(context); // Close dialog
 
@@ -252,13 +253,13 @@ class _KasirScreenState extends ConsumerState<KasirScreen> {
                         );
                       }
                     } catch (e) {
-                      if (mounted) {
+                      if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text('Terjadi kesalahan: $e')),
                         );
                       }
                     } finally {
-                      if (mounted) {
+                      if (context.mounted) {
                         setDialogState(() => isSubmitting = false);
                       }
                     }
@@ -403,11 +404,9 @@ class _KasirScreenState extends ConsumerState<KasirScreen> {
                           topRight: Radius.circular(8), bottomRight: Radius.circular(8),
                         ),
                         onTap: () async {
-                          var res = await Navigator.push(
+                          var res = await SimpleBarcodeScanner.scanBarcode(
                             context,
-                            MaterialPageRoute(
-                              builder: (context) => const SimpleBarcodeScannerPage(cancelButtonText: 'Kembali'),
-                            ),
+                            cancelButtonText: 'Kembali',
                           );
                           if (res is String && res != '-1' && res.isNotEmpty) {
                             _tambahKeKeranjang(res);

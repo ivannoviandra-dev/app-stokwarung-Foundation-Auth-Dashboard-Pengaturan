@@ -305,11 +305,9 @@ class _TambahBarangScreenState extends ConsumerState<TambahBarangScreen> {
                       suffixIcon: IconButton(
                         icon: Icon(Icons.qr_code_scanner, color: c.primary),
                         onPressed: () async {
-                          var res = await Navigator.push(
+                          var res = await SimpleBarcodeScanner.scanBarcode(
                             context,
-                            MaterialPageRoute(
-                              builder: (context) => const SimpleBarcodeScannerPage(cancelButtonText: 'Kembali'),
-                            ),
+                            cancelButtonText: 'Kembali',
                           );
                           if (res is String && res != '-1' && res.isNotEmpty) {
                             setState(() {

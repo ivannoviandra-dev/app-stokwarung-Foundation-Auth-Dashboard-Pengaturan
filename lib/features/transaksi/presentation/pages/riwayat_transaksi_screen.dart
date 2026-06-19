@@ -8,15 +8,18 @@ class RiwayatTransaksiScreen extends ConsumerStatefulWidget {
   const RiwayatTransaksiScreen({super.key});
 
   @override
-  ConsumerState<RiwayatTransaksiScreen> createState() => _RiwayatTransaksiScreenState();
+  ConsumerState<RiwayatTransaksiScreen> createState() =>
+      _RiwayatTransaksiScreenState();
 }
 
-class _RiwayatTransaksiScreenState extends ConsumerState<RiwayatTransaksiScreen> {
-
+class _RiwayatTransaksiScreenState
+    extends ConsumerState<RiwayatTransaksiScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => ref.read(transaksiProvider.notifier).fetchTransaksi());
+    Future.microtask(
+      () => ref.read(transaksiProvider.notifier).fetchTransaksi(),
+    );
   }
 
   String _formatCurrency(int amount) {
@@ -78,7 +81,8 @@ class _RiwayatTransaksiScreenState extends ConsumerState<RiwayatTransaksiScreen>
                   // Handle bar
                   Center(
                     child: Container(
-                      width: 40, height: 4,
+                      width: 40,
+                      height: 4,
                       margin: const EdgeInsets.only(bottom: 20),
                       decoration: BoxDecoration(
                         color: c.outlineVariant,
@@ -90,22 +94,48 @@ class _RiwayatTransaksiScreenState extends ConsumerState<RiwayatTransaksiScreen>
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Detail Transaksi', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: c.onSurface)),
+                      Text(
+                        'Detail Transaksi',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: c.onSurface,
+                        ),
+                      ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
-                          color: _getMetodeColor(transaksi.metode, c).withValues(alpha: 0.1),
+                          color: _getMetodeColor(
+                            transaksi.metode,
+                            c,
+                          ).withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(20),
                         ),
-                        child: Text(transaksi.metode, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: _getMetodeColor(transaksi.metode, c))),
+                        child: Text(
+                          transaksi.metode,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: _getMetodeColor(transaksi.metode, c),
+                          ),
+                        ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 4),
-                  Text(_formatDate(transaksi.createdAt), style: TextStyle(fontSize: 13, color: c.onSurfaceVariant)),
+                  Text(
+                    _formatDate(transaksi.createdAt),
+                    style: TextStyle(fontSize: 13, color: c.onSurfaceVariant),
+                  ),
                   if (transaksi.namaPelanggan != null) ...[
                     const SizedBox(height: 4),
-                    Text('Pelanggan: ${transaksi.namaPelanggan}', style: TextStyle(fontSize: 13, color: c.onSurfaceVariant)),
+                    Text(
+                      'Pelanggan: ${transaksi.namaPelanggan}',
+                      style: TextStyle(fontSize: 13, color: c.onSurfaceVariant),
+                    ),
                   ],
                   const SizedBox(height: 20),
                   Divider(color: c.outlineVariant),
@@ -115,7 +145,10 @@ class _RiwayatTransaksiScreenState extends ConsumerState<RiwayatTransaksiScreen>
                     child: ListView.separated(
                       controller: scrollController,
                       itemCount: transaksi.items.length,
-                      separatorBuilder: (_, __) => Divider(height: 24, color: c.outlineVariant.withValues(alpha: 0.5)),
+                      separatorBuilder: (_, _) => Divider(
+                        height: 24,
+                        color: c.outlineVariant.withValues(alpha: 0.5),
+                      ),
                       itemBuilder: (_, i) {
                         final item = transaksi.items[i];
                         return Row(
@@ -125,13 +158,33 @@ class _RiwayatTransaksiScreenState extends ConsumerState<RiwayatTransaksiScreen>
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(item.namaBarang, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: c.onSurface)),
+                                  Text(
+                                    item.namaBarang,
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w600,
+                                      color: c.onSurface,
+                                    ),
+                                  ),
                                   const SizedBox(height: 2),
-                                  Text('${item.qty}x @ ${_formatCurrency(item.harga)}', style: TextStyle(fontSize: 13, color: c.onSurfaceVariant)),
+                                  Text(
+                                    '${item.qty}x @ ${_formatCurrency(item.harga)}',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: c.onSurfaceVariant,
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
-                            Text(_formatCurrency(item.subtotal), style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: c.onSurface)),
+                            Text(
+                              _formatCurrency(item.subtotal),
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: c.onSurface,
+                              ),
+                            ),
                           ],
                         );
                       },
@@ -142,8 +195,22 @@ class _RiwayatTransaksiScreenState extends ConsumerState<RiwayatTransaksiScreen>
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Total', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: c.onSurface)),
-                      Text(_formatCurrency(transaksi.total), style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: c.primary)),
+                      Text(
+                        'Total',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: c.onSurface,
+                        ),
+                      ),
+                      Text(
+                        _formatCurrency(transaksi.total),
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: c.primary,
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 8),
@@ -188,120 +255,168 @@ class _RiwayatTransaksiScreenState extends ConsumerState<RiwayatTransaksiScreen>
       body: transaksiState.isLoading && allTransaksi.isEmpty
           ? Center(child: CircularProgressIndicator(color: c.primary))
           : allTransaksi.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.receipt_long_outlined,
+                    size: 64,
+                    color: c.outlineVariant,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Belum ada transaksi.',
+                    style: TextStyle(color: c.onSurfaceVariant, fontSize: 16),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Transaksi akan muncul setelah\nAnda memproses pembayaran di kasir.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: c.outline, fontSize: 13),
+                  ),
+                ],
+              ),
+            )
+          : Column(
+              children: [
+                // Summary bar
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 16,
+                  ),
+                  color: c.surfaceContainerLow,
+                  child: Row(
                     children: [
-                      Icon(Icons.receipt_long_outlined, size: 64, color: c.outlineVariant),
-                      const SizedBox(height: 16),
-                      Text('Belum ada transaksi.', style: TextStyle(color: c.onSurfaceVariant, fontSize: 16)),
-                      const SizedBox(height: 8),
-                      Text('Transaksi akan muncul setelah\nAnda memproses pembayaran di kasir.', textAlign: TextAlign.center, style: TextStyle(color: c.outline, fontSize: 13)),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Total Hari Ini',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: c.onSurfaceVariant,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              _formatCurrency(transaksiState.totalHariIni),
+                              style: TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                color: c.primary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: c.primary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          '${transaksiState.jumlahTransaksiHariIni} transaksi',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: c.primary,
+                          ),
+                        ),
+                      ),
                     ],
                   ),
-                )
-              : Column(
-                  children: [
-                    // Summary bar
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                      color: c.surfaceContainerLow,
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                ),
+                // List
+                Expanded(
+                  child: RefreshIndicator(
+                    color: c.primary,
+                    onRefresh: () =>
+                        ref.read(transaksiProvider.notifier).fetchTransaksi(),
+                    child: ListView.separated(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: allTransaksi.length,
+                      separatorBuilder: (_, _) => const SizedBox(height: 12),
+                      itemBuilder: (context, index) {
+                        final trx = allTransaksi[index];
+                        final metodeColor = _getMetodeColor(trx.metode, c);
+
+                        return InkWell(
+                          onTap: () => _showDetailTransaksi(trx),
+                          borderRadius: BorderRadius.circular(12),
+                          child: Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: c.cardColor,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: c.outlineVariant),
+                            ),
+                            child: Row(
                               children: [
-                                Text('Total Hari Ini', style: TextStyle(fontSize: 12, color: c.onSurfaceVariant, fontWeight: FontWeight.w600)),
-                                const SizedBox(height: 4),
+                                Container(
+                                  width: 48,
+                                  height: 48,
+                                  decoration: BoxDecoration(
+                                    color: metodeColor.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Icon(
+                                    _getMetodeIcon(trx.metode),
+                                    color: metodeColor,
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        trx.namaPelanggan != null
+                                            ? '${trx.metode} - ${trx.namaPelanggan}'
+                                            : '${trx.metode} • ${trx.items.length} item',
+                                        style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w600,
+                                          color: c.onSurface,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        _formatDate(trx.createdAt),
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: c.onSurfaceVariant,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                                 Text(
-                                  _formatCurrency(transaksiState.totalHariIni),
-                                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: c.primary),
+                                  _formatCurrency(trx.total),
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: c.primary,
+                                  ),
                                 ),
                               ],
                             ),
                           ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: c.primary.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Text(
-                              '${transaksiState.jumlahTransaksiHariIni} transaksi',
-                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: c.primary),
-                            ),
-                          ),
-                        ],
-                      ),
+                        );
+                      },
                     ),
-                    // List
-                    Expanded(
-                      child: RefreshIndicator(
-                        color: c.primary,
-                        onRefresh: () => ref.read(transaksiProvider.notifier).fetchTransaksi(),
-                        child: ListView.separated(
-                          padding: const EdgeInsets.all(16),
-                          itemCount: allTransaksi.length,
-                          separatorBuilder: (_, __) => const SizedBox(height: 12),
-                          itemBuilder: (context, index) {
-                            final trx = allTransaksi[index];
-                            final metodeColor = _getMetodeColor(trx.metode, c);
-
-                            return InkWell(
-                              onTap: () => _showDetailTransaksi(trx),
-                              borderRadius: BorderRadius.circular(12),
-                              child: Container(
-                                padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  color: c.cardColor,
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: c.outlineVariant),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      width: 48,
-                                      height: 48,
-                                      decoration: BoxDecoration(
-                                        color: metodeColor.withValues(alpha: 0.1),
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Icon(_getMetodeIcon(trx.metode), color: metodeColor),
-                                    ),
-                                    const SizedBox(width: 16),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            trx.namaPelanggan != null
-                                                ? '${trx.metode} - ${trx.namaPelanggan}'
-                                                : '${trx.metode} • ${trx.items.length} item',
-                                            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: c.onSurface),
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            _formatDate(trx.createdAt),
-                                            style: TextStyle(fontSize: 12, color: c.onSurfaceVariant),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    Text(
-                                      _formatCurrency(trx.total),
-                                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: c.primary),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
+              ],
+            ),
     );
   }
 }

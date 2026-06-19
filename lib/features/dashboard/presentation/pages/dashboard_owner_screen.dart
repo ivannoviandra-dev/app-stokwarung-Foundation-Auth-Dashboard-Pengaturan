@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../pengaturan/presentation/providers/settings_provider.dart';
 import '../providers/dashboard_provider.dart';
@@ -59,8 +58,8 @@ class DashboardOwnerScreen extends ConsumerWidget {
         actions: [
           IconButton(
             icon: Icon(
-              isDarkMode ? Icons.light_mode_outlined : Icons.dark_mode_outlined, 
-              color: c.primaryGreen
+              isDarkMode ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
+              color: c.primaryGreen,
             ),
             onPressed: () {
               ref.read(settingsProvider.notifier).toggleDarkMode(!isDarkMode);
@@ -70,7 +69,10 @@ class DashboardOwnerScreen extends ConsumerWidget {
             alignment: Alignment.center,
             children: [
               IconButton(
-                icon: Icon(Icons.notifications_none_outlined, color: c.primaryGreen),
+                icon: Icon(
+                  Icons.notifications_none_outlined,
+                  color: c.primaryGreen,
+                ),
                 onPressed: () => context.push('/notifications'),
               ),
               if (dashboardData.totalNotifikasi > 0)
@@ -112,10 +114,7 @@ class DashboardOwnerScreen extends ConsumerWidget {
               // Greeting
               Text(
                 'Selamat datang!',
-                style: TextStyle(
-                  color: c.greyText,
-                  fontSize: 14,
-                ),
+                style: TextStyle(color: c.greyText, fontSize: 14),
               ),
               const SizedBox(height: 8),
               Text(
@@ -150,7 +149,11 @@ class DashboardOwnerScreen extends ConsumerWidget {
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.account_balance_wallet_outlined, color: c.darkText, size: 16),
+                            Icon(
+                              Icons.account_balance_wallet_outlined,
+                              color: c.darkText,
+                              size: 16,
+                            ),
                             const SizedBox(width: 8),
                             Text(
                               'LABA HARI INI',
@@ -164,14 +167,21 @@ class DashboardOwnerScreen extends ConsumerWidget {
                           ],
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.black.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Row(
                             children: [
-                              Icon(Icons.trending_up, color: c.darkText, size: 14),
+                              Icon(
+                                Icons.trending_up,
+                                color: c.darkText,
+                                size: 14,
+                              ),
                               const SizedBox(width: 4),
                               Text(
                                 '12%',
@@ -198,10 +208,7 @@ class DashboardOwnerScreen extends ConsumerWidget {
                     const SizedBox(height: 8),
                     Text(
                       'Target harian tercapai 85%',
-                      style: TextStyle(
-                        color: c.darkText,
-                        fontSize: 12,
-                      ),
+                      style: TextStyle(color: c.darkText, fontSize: 12),
                     ),
                   ],
                 ),
@@ -223,7 +230,11 @@ class DashboardOwnerScreen extends ConsumerWidget {
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.receipt_long_outlined, color: c.piutangText, size: 16),
+                            Icon(
+                              Icons.receipt_long_outlined,
+                              color: c.piutangText,
+                              size: 16,
+                            ),
                             const SizedBox(width: 8),
                             Text(
                               'TOTAL PIUTANG',
@@ -252,7 +263,10 @@ class DashboardOwnerScreen extends ConsumerWidget {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: c.piutangButton,
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -290,7 +304,10 @@ class DashboardOwnerScreen extends ConsumerWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Icon(Icons.inventory_2_outlined, color: c.primaryGreen),
+                            Icon(
+                              Icons.inventory_2_outlined,
+                              color: c.primaryGreen,
+                            ),
                             const SizedBox(height: 16),
                             Text(
                               'TOTAL BARANG',
@@ -308,7 +325,10 @@ class DashboardOwnerScreen extends ConsumerWidget {
                                 children: [
                                   TextSpan(
                                     text: '${dashboardData.totalBarang} ',
-                                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                   const TextSpan(
                                     text: 'SKU',
@@ -336,7 +356,10 @@ class DashboardOwnerScreen extends ConsumerWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Icon(Icons.receipt_outlined, color: c.piutangButton),
+                            Icon(
+                              Icons.receipt_outlined,
+                              color: c.piutangButton,
+                            ),
                             const SizedBox(height: 16),
                             Text(
                               'TRANSAKSI',
@@ -354,7 +377,10 @@ class DashboardOwnerScreen extends ConsumerWidget {
                                 children: [
                                   TextSpan(
                                     text: '${dashboardData.totalTransaksi} ',
-                                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                   const TextSpan(
                                     text: 'Nota',
@@ -419,7 +445,9 @@ class DashboardOwnerScreen extends ConsumerWidget {
 
               // Attention Items List
               ...dashboardData.perluPerhatian.map((item) {
-                final isKritis = item.type == 'stok_kritis' || item.type == 'kadaluarsa_kritis';
+                final isKritis =
+                    item.type == 'stok_kritis' ||
+                    item.type == 'kadaluarsa_kritis';
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 12.0),
                   child: _buildAttentionItem(
@@ -427,9 +455,15 @@ class DashboardOwnerScreen extends ConsumerWidget {
                     title: item.title,
                     subtitle: item.subtitle,
                     badgeText: item.badgeText,
-                    badgeColor: isKritis ? c.statusCritical.withValues(alpha: 0.2) : c.statusWarning.withValues(alpha: 0.2),
-                    badgeTextColor: isKritis ? c.statusCritical : c.statusWarning,
-                    icon: isKritis ? Icons.inventory_2_outlined : Icons.event_busy_outlined,
+                    badgeColor: isKritis
+                        ? c.statusCritical.withValues(alpha: 0.2)
+                        : c.statusWarning.withValues(alpha: 0.2),
+                    badgeTextColor: isKritis
+                        ? c.statusCritical
+                        : c.statusWarning,
+                    icon: isKritis
+                        ? Icons.inventory_2_outlined
+                        : Icons.event_busy_outlined,
                   ),
                 );
               }),
@@ -491,10 +525,7 @@ class DashboardOwnerScreen extends ConsumerWidget {
                 const SizedBox(height: 4),
                 Text(
                   subtitle,
-                  style: TextStyle(
-                    color: c.greyText,
-                    fontSize: 13,
-                  ),
+                  style: TextStyle(color: c.greyText, fontSize: 13),
                 ),
               ],
             ),
