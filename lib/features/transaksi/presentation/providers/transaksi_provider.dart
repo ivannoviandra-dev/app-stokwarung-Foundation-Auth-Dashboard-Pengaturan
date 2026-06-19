@@ -94,6 +94,7 @@ class TransaksiNotifier extends Notifier<TransaksiState> {
     required int total,
     required String metode,
     String? namaPelanggan,
+    String? midtransOrderId,
   }) async {
     try {
       state = state.copyWith(isLoading: true);
@@ -106,6 +107,7 @@ class TransaksiNotifier extends Notifier<TransaksiState> {
         'total': total,
         'metode': metode,
         if (namaPelanggan != null) 'nama_pelanggan': namaPelanggan,
+        if (midtransOrderId != null) 'midtrans_order_id': midtransOrderId,
       };
 
       final responseTransaksi = await _supabase

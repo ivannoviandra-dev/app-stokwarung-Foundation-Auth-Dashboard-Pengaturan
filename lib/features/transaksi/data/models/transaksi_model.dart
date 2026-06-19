@@ -5,6 +5,7 @@ class Transaksi {
   final String metode;
   final String? namaPelanggan;
   final String? catatan;
+  final String? midtransOrderId;
   final DateTime createdAt;
   final List<TransaksiItem> items;
 
@@ -15,6 +16,7 @@ class Transaksi {
     required this.metode,
     this.namaPelanggan,
     this.catatan,
+    this.midtransOrderId,
     required this.createdAt,
     this.items = const [],
   });
@@ -34,6 +36,7 @@ class Transaksi {
       metode: json['metode'] ?? 'Tunai',
       namaPelanggan: json['nama_pelanggan'],
       catatan: json['catatan'],
+      midtransOrderId: json['midtrans_order_id'],
       createdAt: DateTime.parse(json['created_at'].toString()),
       items: items,
     );

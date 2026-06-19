@@ -3,12 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'struk_pembayaran_screen.dart';
+import 'midtrans_payment_screen.dart';
 import '../../../transaksi/data/models/transaksi_model.dart';
 import '../../../barang/presentation/providers/barang_provider.dart';
 import '../../../transaksi/presentation/providers/transaksi_provider.dart';
 import '../../../utang/presentation/providers/utang_provider.dart';
 import '../../../reminder/presentation/pages/notifications_screen.dart';
 import 'package:simple_barcode_scanner/simple_barcode_scanner.dart';
+import '../../../../core/services/midtrans_service.dart';
 
 class KasirScreen extends ConsumerStatefulWidget {
   const KasirScreen({super.key});
@@ -36,7 +38,7 @@ class _KasirScreenState extends ConsumerState<KasirScreen> {
     return 'Rp$str';
   }
 
-  Future<void> _prosesPembayaran(String metode, {String? pelangganId, String? namaPelanggan}) async {
+  Future<void> _prosesPembayaran(String metode, {String? pelangganId, String? namaPelanggan, String? midtransOrderId}) async {
     if (_keranjang.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Keranjang kosong!')),
@@ -62,6 +64,7 @@ class _KasirScreenState extends ConsumerState<KasirScreen> {
         total: total,
         metode: metode,
         namaPelanggan: namaPelanggan,
+        midtransOrderId: midtransOrderId,
       );
 
       if (metode == 'Utang' && pelangganId != null) {
@@ -95,6 +98,89 @@ class _KasirScreenState extends ConsumerState<KasirScreen> {
           ),
         ),
       );
+    }
+  }
+
+  /// Proses pembayaran QRIS via Midtrans Snap.
+  Future<void> _prosesPembayaranQRIS() async {
+    if (_keranjang.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Keranjang kosong!')),
+      );
+      return;
+    }
+
+    final total = _totalPrice;
+    final orderId = 'SW-${DateTime.now().millisecondsSinceEpoch}';
+
+    // Tampilkan loading
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      // 1. Buat Snap Token dari Midtrans
+      final snapResult = await MidtransService.createSnapToken(
+        orderId: orderId,
+        grossAmount: total,
+        items: _keranjang,
+      );
+
+      if (!mounted) return;
+      Navigator.pop(context); // tutup loading
+
+      final redirectUrl = snapResult['redirect_url']!;
+
+      // 2. Buka WebView Midtrans
+      final paymentStatus = await Navigator.push<MidtransPaymentStatus>(
+        context,
+        MaterialPageRoute(
+          builder: (_) => MidtransPaymentScreen(
+            redirectUrl: redirectUrl,
+            orderId: orderId,
+            totalAmount: total,
+          ),
+        ),
+      );
+
+      if (!mounted) return;
+
+      // 3. Proses hasil pembayaran
+      if (paymentStatus == MidtransPaymentStatus.success) {
+        await _prosesPembayaran('QRIS', midtransOrderId: orderId);
+      } else if (paymentStatus == MidtransPaymentStatus.pending) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Pembayaran pending. Menunggu konfirmasi...'),
+            duration: Duration(seconds: 3),
+          ),
+        );
+        // Tetap simpan transaksi dengan status pending
+        await _prosesPembayaran('QRIS', midtransOrderId: orderId);
+      } else if (paymentStatus == MidtransPaymentStatus.cancelled) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Pembayaran dibatalkan')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Pembayaran gagal. Silakan coba lagi.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context); // tutup loading
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -626,7 +712,7 @@ class _KasirScreenState extends ConsumerState<KasirScreen> {
                   minimumSize: const Size(double.infinity, 48),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)), elevation: 1,
                 ),
-                onPressed: () => _prosesPembayaran('QRIS'),
+                onPressed: _prosesPembayaranQRIS,
                 child: const Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                   Icon(Icons.qr_code_2), SizedBox(width: 8),
                   Text('Bayar QRIS', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
