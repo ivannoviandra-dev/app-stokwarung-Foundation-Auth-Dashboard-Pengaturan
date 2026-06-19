@@ -93,7 +93,7 @@ class _ManajemenBarangScreenState extends ConsumerState<ManajemenBarangScreen> {
               var res = await Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const SimpleBarcodeScannerPage(),
+                  builder: (context) => const SimpleBarcodeScannerPage(cancelButtonText: 'Kembali'),
                 ),
               );
               if (res is String && res != '-1' && res.isNotEmpty) {

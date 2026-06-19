@@ -1035,6 +1035,16 @@ class PengaturanScreen extends ConsumerWidget {
                           return;
                         }
 
+                        if (pass.length < 6) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Password minimal 6 karakter'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                          return;
+                        }
+
                         final success = await ref.read(kasirProvider.notifier).tambahKasir(
                               nama: nama,
                               username: email,
