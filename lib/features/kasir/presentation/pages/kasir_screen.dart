@@ -8,6 +8,8 @@ import '../../../reminder/presentation/pages/notifications_screen.dart';
 import '../../../utang/presentation/providers/utang_provider.dart';
 import '../../../transaksi/presentation/providers/transaksi_provider.dart';
 import 'package:simple_barcode_scanner/simple_barcode_scanner.dart';
+import 'midtrans_payment_screen.dart';
+import '../../../../core/services/midtrans_service.dart';
 class KasirScreen extends ConsumerStatefulWidget {
   const KasirScreen({super.key});
 
@@ -34,7 +36,7 @@ class _KasirScreenState extends ConsumerState<KasirScreen> {
     return 'Rp$str';
   }
 
-  void _prosesPembayaran(String metode) {
+  void _prosesPembayaran(String metode, {String? midtransOrderId}) {
     if (_keranjang.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Keranjang kosong!')),
@@ -58,6 +60,7 @@ class _KasirScreenState extends ConsumerState<KasirScreen> {
       keranjang: keranjangCopy,
       total: total,
       metode: metode,
+      midtransOrderId: midtransOrderId,
     );
 
     setState(() => _keranjang.clear());
@@ -70,6 +73,78 @@ class _KasirScreenState extends ConsumerState<KasirScreen> {
         ),
       ),
     );
+  }
+
+  /// Proses pembayaran QRIS via Midtrans Snap.
+  Future<void> _prosesPembayaranQRIS() async {
+    if (_keranjang.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Keranjang kosong!')),
+      );
+      return;
+    }
+
+    final total = _totalPrice;
+    final orderId = 'TRX-${DateTime.now().millisecondsSinceEpoch}';
+
+    // Tampilkan loading
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      // 1. Buat Snap Token dari Midtrans
+      final snapResult = await MidtransService.createSnapToken(
+        orderId: orderId,
+        grossAmount: total,
+        items: _keranjang,
+      );
+
+      // Tutup loading
+      if (mounted) Navigator.pop(context);
+
+      final redirectUrl = snapResult['redirect_url']!;
+
+      // 2. Buka WebView Midtrans
+      final paymentStatus = await Navigator.push<MidtransPaymentStatus>(
+        context,
+        MaterialPageRoute(
+          builder: (_) => MidtransPaymentScreen(
+            redirectUrl: redirectUrl,
+            orderId: orderId,
+            totalAmount: total,
+          ),
+        ),
+      );
+
+      if (!mounted) return;
+
+      // 3. Proses hasil pembayaran
+      if (paymentStatus == MidtransPaymentStatus.success) {
+        _prosesPembayaran('QRIS', midtransOrderId: orderId);
+      } else if (paymentStatus == MidtransPaymentStatus.pending) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Pembayaran pending. Menunggu konfirmasi...'),
+          ),
+        );
+        // Tetap simpan transaksi dengan status pending
+        _prosesPembayaran('QRIS', midtransOrderId: orderId);
+      } else if (paymentStatus == MidtransPaymentStatus.cancelled) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Pembayaran dibatalkan')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context); // Tutup loading
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal memulai pembayaran: $e')),
+        );
+      }
+    }
   }
 
   void _showCatatUtangDialog() {
@@ -536,7 +611,7 @@ class _KasirScreenState extends ConsumerState<KasirScreen> {
                   minimumSize: const Size(double.infinity, 48),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)), elevation: 1,
                 ),
-                onPressed: () => _prosesPembayaran('QRIS'),
+                onPressed: _prosesPembayaranQRIS,
                 child: const Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                   Icon(Icons.qr_code_2), SizedBox(width: 8),
                   Text('Bayar QRIS', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
