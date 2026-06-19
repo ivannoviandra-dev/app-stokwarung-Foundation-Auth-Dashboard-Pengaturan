@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/services/midtrans_service.dart';
+import '../../../kasir/presentation/pages/midtrans_payment_screen.dart';
 import '../../data/models/pelanggan_model.dart';
 import '../../data/models/utang_model.dart';
 import '../providers/utang_provider.dart';
@@ -98,6 +100,17 @@ class _BayarUtangScreenState extends ConsumerState<BayarUtangScreen> {
       return;
     }
 
+    // Jika metode QRIS dan jenis bayar, proses via Midtrans
+    if (_metode == 'QRIS' && _jenisTransaksi == 'bayar') {
+      await _simpanViaQRIS();
+      return;
+    }
+
+    await _simpanLangsung();
+  }
+
+  /// Simpan transaksi langsung (untuk Tunai atau Tambah Utang).
+  Future<void> _simpanLangsung() async {
     setState(() {
       _isSaving = true;
     });
@@ -124,6 +137,81 @@ class _BayarUtangScreenState extends ConsumerState<BayarUtangScreen> {
         setState(() {
           _isSaving = false;
         });
+      }
+    }
+  }
+
+  /// Simpan transaksi via Midtrans QRIS.
+  Future<void> _simpanViaQRIS() async {
+    final orderId = 'UTG-${DateTime.now().millisecondsSinceEpoch}';
+
+    // Tampilkan loading
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      // 1. Buat Snap Token
+      final snapResult = await MidtransService.createSnapToken(
+        orderId: orderId,
+        grossAmount: _jumlahBayar,
+        items: [
+          {
+            'id': 'utang-${widget.pelanggan.id}',
+            'nama': 'Bayar Utang - ${widget.pelanggan.nama}',
+            'harga': _jumlahBayar,
+            'qty': 1,
+          }
+        ],
+        customerName: widget.pelanggan.nama,
+      );
+
+      if (!mounted) return;
+      Navigator.pop(context); // tutup loading
+
+      final redirectUrl = snapResult['redirect_url']!;
+
+      // 2. Buka WebView Midtrans
+      final paymentStatus = await Navigator.push<MidtransPaymentStatus>(
+        context,
+        MaterialPageRoute(
+          builder: (_) => MidtransPaymentScreen(
+            redirectUrl: redirectUrl,
+            orderId: orderId,
+            totalAmount: _jumlahBayar,
+          ),
+        ),
+      );
+
+      if (!mounted) return;
+
+      // 3. Proses hasil pembayaran
+      if (paymentStatus == MidtransPaymentStatus.success ||
+          paymentStatus == MidtransPaymentStatus.pending) {
+        await _simpanLangsung();
+      } else if (paymentStatus == MidtransPaymentStatus.cancelled) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Pembayaran dibatalkan')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Pembayaran gagal. Silakan coba lagi.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context); // tutup loading
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }
