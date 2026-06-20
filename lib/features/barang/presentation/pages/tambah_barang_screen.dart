@@ -194,10 +194,17 @@ class _TambahBarangScreenState extends ConsumerState<TambahBarangScreen> {
         ),
         const SizedBox(height: 4),
         DropdownButtonFormField<String>(
+          isExpanded: true,
           value: value,
           onChanged: onChanged,
           items: items
-              .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+              .map((e) => DropdownMenuItem(
+                    value: e,
+                    child: Text(
+                      e,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ))
               .toList(),
           style: TextStyle(fontSize: 14, color: c.onSurface),
           decoration: InputDecoration(
