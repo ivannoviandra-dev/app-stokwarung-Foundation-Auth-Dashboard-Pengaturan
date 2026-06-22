@@ -1,5 +1,4 @@
 import 'package:go_router/go_router.dart';
-import '../../features/splash/presentation/pages/splash_screen.dart';
 import '../../features/auth/presentation/pages/login_screen.dart';
 import '../../features/auth/presentation/pages/register_screen.dart';
 import '../../features/dashboard/presentation/pages/dashboard_owner_screen.dart';
@@ -17,15 +16,14 @@ import '../widgets/main_layout_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 final appRouter = GoRouter(
-  initialLocation: '/splash',
+  initialLocation: '/login',
   redirect: (context, state) {
     final auth = Supabase.instance.client.auth;
     final session = auth.currentSession;
     final user = auth.currentUser;
     final isLoggingIn = state.matchedLocation == '/login' || state.matchedLocation == '/register';
-    final isSplash = state.matchedLocation == '/splash';
 
-    if (session == null && !isLoggingIn && !isSplash) {
+    if (session == null && !isLoggingIn) {
       return '/login';
     }
 
@@ -41,10 +39,6 @@ final appRouter = GoRouter(
     return null;
   },
   routes: [
-    GoRoute(
-      path: '/splash',
-      builder: (context, state) => const SplashScreen(),
-    ),
     GoRoute(
       path: '/login',
       builder: (context, state) => const LoginScreen(),

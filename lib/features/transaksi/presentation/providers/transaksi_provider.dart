@@ -67,7 +67,9 @@ class TransaksiNotifier extends Notifier<TransaksiState> {
     try {
       state = state.copyWith(isLoading: true);
       final targetUserId = _targetUserId;
+      print('[Transaksi] fetchTransaksi called, targetUserId: $targetUserId');
       if (targetUserId.isEmpty) {
+        print('[Transaksi] targetUserId is empty, returning empty list');
         state = state.copyWith(transaksiList: [], isLoading: false);
         return;
       }
@@ -78,13 +80,19 @@ class TransaksiNotifier extends Notifier<TransaksiState> {
           .eq('user_id', targetUserId)
           .order('created_at', ascending: false);
 
-      final list = (response as List)
+      print('[Transaksi] Raw response count: ${(response as List).length}');
+      if ((response).isNotEmpty) {
+        print('[Transaksi] First item keys: ${(response[0] as Map).keys.toList()}');
+      }
+
+      final list = (response)
           .map((json) => Transaksi.fromJson(json))
           .toList();
 
+      print('[Transaksi] Parsed ${list.length} transaksi');
       state = state.copyWith(transaksiList: list, isLoading: false);
     } catch (e) {
-      print('Error fetching transaksi: $e');
+      print('[Transaksi] Error fetching transaksi: $e');
       state = state.copyWith(isLoading: false);
     }
   }
@@ -107,7 +115,7 @@ class TransaksiNotifier extends Notifier<TransaksiState> {
         'total': total,
         'metode': metode,
         if (namaPelanggan != null) 'nama_pelanggan': namaPelanggan,
-        if (midtransOrderId != null) 'midtrans_order_id': midtransOrderId,
+        // if (midtransOrderId != null) 'midtrans_order_id': midtransOrderId, // Dicomment sementara karena kolom belum ada di Supabase
       };
 
       final responseTransaksi = await _supabase

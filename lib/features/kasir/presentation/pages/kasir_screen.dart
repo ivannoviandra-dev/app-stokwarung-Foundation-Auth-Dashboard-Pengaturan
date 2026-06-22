@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/services/midtrans_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'struk_pembayaran_screen.dart';
-import '../../../barang/presentation/providers/barang_provider.dart';
-import '../../../reminder/presentation/pages/notifications_screen.dart';
-import '../../../utang/presentation/providers/utang_provider.dart';
-import '../../../transaksi/presentation/providers/transaksi_provider.dart';
-import 'package:simple_barcode_scanner/simple_barcode_scanner.dart';
 import 'midtrans_payment_screen.dart';
-import '../../../../core/services/midtrans_service.dart';
+import '../../../transaksi/data/models/transaksi_model.dart';
+import '../../../barang/presentation/providers/barang_provider.dart';
+import '../../../transaksi/presentation/providers/transaksi_provider.dart';
+import '../../../utang/presentation/providers/utang_provider.dart';
+import '../../../reminder/presentation/pages/notifications_screen.dart';
+import 'package:simple_barcode_scanner/simple_barcode_scanner.dart';
+
 class KasirScreen extends ConsumerStatefulWidget {
   const KasirScreen({super.key});
 
@@ -27,6 +30,7 @@ class _KasirScreenState extends ConsumerState<KasirScreen> {
   }
 
   final List<Map<String, dynamic>> _keranjang = [];
+  bool _isProcessingQRIS = false;
 
   String _formatCurrency(int amount) {
     final str = amount.toString().replaceAllMapped(
@@ -36,7 +40,7 @@ class _KasirScreenState extends ConsumerState<KasirScreen> {
     return 'Rp$str';
   }
 
-  void _prosesPembayaran(String metode, {String? midtransOrderId}) {
+  Future<void> _prosesPembayaran(String metode, {String? pelangganId, String? namaPelanggan}) async {
     if (_keranjang.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Keranjang kosong!')),
@@ -55,100 +59,52 @@ class _KasirScreenState extends ConsumerState<KasirScreen> {
       }
     }
 
-    // Simpan transaksi ke database
-    ref.read(transaksiProvider.notifier).simpanTransaksi(
-      keranjang: keranjangCopy,
-      total: total,
-      metode: metode,
-      midtransOrderId: midtransOrderId,
-    );
-
-    setState(() => _keranjang.clear());
-
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => StrukPembayaranScreen(
-          keranjang: keranjangCopy, total: total, metode: metode,
-        ),
-      ),
-    );
-  }
-
-  /// Proses pembayaran QRIS via Midtrans Snap.
-  Future<void> _prosesPembayaranQRIS() async {
-    if (_keranjang.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Keranjang kosong!')),
-      );
-      return;
-    }
-
-    final total = _totalPrice;
-    final orderId = 'TRX-${DateTime.now().millisecondsSinceEpoch}';
-
-    // Tampilkan loading
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const Center(child: CircularProgressIndicator()),
-    );
-
+    Transaksi? savedTransaksi;
     try {
-      // 1. Buat Snap Token dari Midtrans
-      final snapResult = await MidtransService.createSnapToken(
-        orderId: orderId,
-        grossAmount: total,
-        items: _keranjang,
+      savedTransaksi = await ref.read(transaksiProvider.notifier).simpanTransaksi(
+        keranjang: keranjangCopy,
+        total: total,
+        metode: metode,
+        namaPelanggan: namaPelanggan,
       );
 
-      // Tutup loading
-      if (mounted) Navigator.pop(context);
-
-      final redirectUrl = snapResult['redirect_url']!;
-
-      if (!mounted) return;
-      // 2. Buka WebView Midtrans
-      final paymentStatus = await Navigator.push<MidtransPaymentStatus>(
-        context,
-        MaterialPageRoute(
-          builder: (_) => MidtransPaymentScreen(
-            redirectUrl: redirectUrl,
-            orderId: orderId,
-            totalAmount: total,
-          ),
-        ),
-      );
-
-      if (!mounted) return;
-
-      // 3. Proses hasil pembayaran
-      if (paymentStatus == MidtransPaymentStatus.success) {
-        _prosesPembayaran('QRIS', midtransOrderId: orderId);
-      } else if (paymentStatus == MidtransPaymentStatus.pending) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Pembayaran pending. Menunggu konfirmasi...'),
-          ),
-        );
-        // Tetap simpan transaksi dengan status pending
-        _prosesPembayaran('QRIS', midtransOrderId: orderId);
-      } else if (paymentStatus == MidtransPaymentStatus.cancelled) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Pembayaran dibatalkan')),
+      if (metode == 'Utang' && pelangganId != null) {
+        await ref.read(utangProvider.notifier).tambahCatatanUtang(
+          pelangganId: pelangganId,
+          jumlah: total,
+          jenis: 'utang',
+          keterangan: 'Transaksi Pembelian',
         );
       }
     } catch (e) {
       if (mounted) {
-        Navigator.pop(context); // Tutup loading
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal memulai pembayaran: $e')),
+          SnackBar(content: Text('Gagal memproses transaksi: $e')),
         );
       }
+      return; // Stop here if failed
+    }
+
+    if (mounted) {
+      setState(() => _keranjang.clear());
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => StrukPembayaranScreen(
+            keranjang: keranjangCopy,
+            total: total,
+            metode: metode,
+            transaksiId: savedTransaksi?.id,
+          ),
+        ),
+      );
     }
   }
 
-  void _showCatatUtangDialog() {
+  /// Proses pembayaran QRIS melalui Midtrans Snap.
+  Future<void> _prosesQRIS() async {
+    if (_isProcessingQRIS) return;
     if (_keranjang.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Keranjang kosong!')),
@@ -156,158 +112,141 @@ class _KasirScreenState extends ConsumerState<KasirScreen> {
       return;
     }
 
-    final TextEditingController nameController = TextEditingController();
+    setState(() {
+      _isProcessingQRIS = true;
+    });
 
-    showDialog(
-      context: context,
-      builder: (context) {
-        final c = AppColors.of(context);
-        bool isSubmitting = false;
+    final keranjangCopy = List<Map<String, dynamic>>.from(
+        _keranjang.map((e) => Map<String, dynamic>.from(e)));
+    final total = _totalPrice;
+    final orderId = 'TRX-${DateTime.now().millisecondsSinceEpoch}';
 
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              backgroundColor: c.surface,
-              title: Text('Catat Utang', style: TextStyle(color: c.onSurface)),
-              content: TextField(
-                controller: nameController,
-                decoration: InputDecoration(
-                  hintText: 'Masukkan nama pelanggan',
-                  hintStyle: TextStyle(color: c.outline),
-                  enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: c.outlineVariant)),
-                  focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: c.primary)),
-                ),
-                style: TextStyle(color: c.onSurface),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: isSubmitting ? null : () => Navigator.pop(context),
-                  child: Text('Batal', style: TextStyle(color: c.tertiary)),
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: c.primary, foregroundColor: Colors.white),
-                  onPressed: isSubmitting ? null : () async {
-                    final nama = nameController.text.trim();
-                    if (nama.isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Nama tidak boleh kosong')),
-                      );
-                      return;
-                    }
+    try {
+      // 1. Buat Snap Token via Midtrans API
+      final snapResult = await MidtransService.createSnapToken(
+        orderId: orderId,
+        grossAmount: total,
+        items: keranjangCopy.map((item) {
+          return {
+            'id': item['id']?.toString() ?? 'item',
+            'nama': item['nama'] as String,
+            'harga': item['harga'] as int,
+            'qty': item['qty'] as int,
+          };
+        }).toList(),
+      );
 
-                    setDialogState(() => isSubmitting = true);
+      if (!mounted) return;
 
-                    try {
-                      final total = _totalPrice;
-                      final keranjangCopy = List<Map<String, dynamic>>.from(
-                        _keranjang.map((e) => Map<String, dynamic>.from(e)));
+      final snapToken = snapResult['token']!;
 
-                      // Kurangi stok barang
-                      final barangNotifier = ref.read(barangProvider.notifier);
-                      for (var item in keranjangCopy) {
-                        if (item['id'] != null) {
-                          barangNotifier.kurangiStok(item['id'], item['qty'] as int);
-                        }
-                      }
+      // 2. Tentukan jalur berdasarkan platform
+      String paymentResult;
 
-                      // Simpan ke utang
-                      final utangNotifier = ref.read(utangProvider.notifier);
-                      final state = ref.read(utangProvider);
-                      
-                      final existingPelanggan = state.pelangganList.where((p) => p.nama.toLowerCase() == nama.toLowerCase()).toList();
-                      
-                      if (existingPelanggan.isNotEmpty) {
-                        await utangNotifier.tambahCatatanUtang(
-                          pelangganId: existingPelanggan.first.id,
-                          jumlah: total,
-                          jenis: 'utang',
-                          keterangan: 'Belanja warung',
-                        );
-                      } else {
-                        await utangNotifier.tambahPelanggan(nama, total);
-                      }
+      if (kIsWeb) {
+        // Di Web: buka Snap.js popup langsung di browser
+        paymentResult = await MidtransService.openSnapPopup(snapToken);
+      } else {
+        // Di Mobile: buka WebView
+        final redirectUrl = snapResult['redirect_url']!;
+        final status = await Navigator.push<MidtransPaymentStatus>(
+          context,
+          MaterialPageRoute(
+            builder: (_) => MidtransPaymentScreen(
+              redirectUrl: redirectUrl,
+              orderId: orderId,
+              totalAmount: total,
+            ),
+          ),
+        );
 
-                      // Simpan transaksi ke database
-                      ref.read(transaksiProvider.notifier).simpanTransaksi(
-                        keranjang: keranjangCopy,
-                        total: total,
-                        metode: 'Utang',
-                        namaPelanggan: nama,
-                      );
+        // Map MidtransPaymentStatus ke string
+        switch (status) {
+          case MidtransPaymentStatus.success:
+            paymentResult = 'success';
+            break;
+          case MidtransPaymentStatus.pending:
+            paymentResult = 'pending';
+            break;
+          case MidtransPaymentStatus.cancelled:
+            paymentResult = 'close';
+            break;
+          default:
+            paymentResult = 'error';
+        }
+      }
 
-                      if (context.mounted) {
-                        setState(() => _keranjang.clear());
-                        Navigator.pop(context); // Close dialog
+      if (!mounted) return;
 
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Berhasil mencatat utang!')),
-                        );
+      // 3. Proses hasil pembayaran
+      if (paymentResult == 'success' || paymentResult == 'pending') {
+        // Kurangi stok barang
+        final barangNotifier = ref.read(barangProvider.notifier);
+        for (var item in keranjangCopy) {
+          if (item['id'] != null) {
+            barangNotifier.kurangiStok(item['id'], item['qty'] as int);
+          }
+        }
 
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => StrukPembayaranScreen(
-                              keranjang: keranjangCopy, total: total, metode: 'Utang ($nama)',
-                            ),
-                          ),
-                        );
-                      }
-                    } catch (e) {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Terjadi kesalahan: $e')),
-                        );
-                      }
-                    } finally {
-                      if (context.mounted) {
-                        setDialogState(() => isSubmitting = false);
-                      }
-                    }
-                  },
-                  child: isSubmitting 
-                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                    : const Text('Simpan'),
-                ),
-              ],
+        // Simpan transaksi ke Supabase
+        Transaksi? savedTransaksi;
+        try {
+          savedTransaksi = await ref.read(transaksiProvider.notifier).simpanTransaksi(
+            keranjang: keranjangCopy,
+            total: total,
+            metode: 'QRIS',
+            midtransOrderId: orderId,
+          );
+        } catch (e) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Pembayaran berhasil, tapi gagal menyimpan: $e')),
             );
           }
+          return;
+        }
+
+        if (mounted) {
+          setState(() => _keranjang.clear());
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => StrukPembayaranScreen(
+                keranjang: keranjangCopy,
+                total: total,
+                metode: 'QRIS',
+                transaksiId: savedTransaksi?.id,
+              ),
+            ),
+          );
+        }
+      } else if (paymentResult == 'close') {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Pembayaran QRIS dibatalkan')),
         );
-      },
-    );
-  }
-
-  void _tambahKeKeranjang(String value) {
-    if (value.trim().isNotEmpty) {
-      final semuaBarang = ref.read(barangProvider).semuaBarang;
-      final foundBarang = semuaBarang.where((b) => 
-        b.nama.toLowerCase() == value.trim().toLowerCase() || 
-        (b.barcode != null && b.barcode == value.trim())
-      ).toList();
-
-      if (foundBarang.isNotEmpty) {
-        final barang = foundBarang.first;
-        setState(() {
-          final index = _keranjang.indexWhere((item) =>
-              item['nama'].toString().toLowerCase() ==
-                  barang.nama.toLowerCase());
-          if (index >= 0) {
-            _keranjang[index]['qty'] += 1;
-          } else {
-            _keranjang.add({
-              'id': barang.id,
-              'nama': barang.nama, 
-              'harga': barang.harga, 
-              'harga_modal': barang.hargaBeli,
-              'qty': 1
-            });
-          }
-        });
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Barang tidak ditemukan!')),
+          const SnackBar(
+            content: Text('Pembayaran QRIS gagal. Silakan coba lagi.'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
-      _searchController.clear();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal memproses pembayaran QRIS: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isProcessingQRIS = false;
+        });
+      }
     }
   }
 
@@ -316,6 +255,167 @@ class _KasirScreenState extends ConsumerState<KasirScreen> {
       _keranjang[index]['qty'] += delta;
       if (_keranjang[index]['qty'] <= 0) _keranjang.removeAt(index);
     });
+  }
+
+  void _showCatatUtangSheet() {
+    if (_keranjang.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Keranjang kosong!')),
+      );
+      return;
+    }
+
+    final utangState = ref.read(utangProvider);
+    final pelangganList = utangState.pelangganList;
+    final c = AppColors.of(context);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) {
+        return DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.6,
+          maxChildSize: 0.9,
+          builder: (_, scrollController) {
+            return Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                children: [
+                  Container(
+                    width: 40, height: 4,
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(color: c.outlineVariant, borderRadius: BorderRadius.circular(2)),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Pilih Pelanggan', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: c.darkText)),
+                      TextButton.icon(
+                        onPressed: () {
+                          Navigator.pop(ctx);
+                          _showTambahPelangganUtangDialog();
+                        },
+                        icon: const Icon(Icons.person_add, size: 18),
+                        label: const Text('Pelanggan Baru'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  if (pelangganList.isEmpty)
+                    Expanded(
+                      child: Center(
+                        child: Text('Belum ada pelanggan.\nTambahkan pelanggan di menu Buku Utang terlebih dahulu.', textAlign: TextAlign.center, style: TextStyle(color: c.greyText)),
+                      ),
+                    )
+                  else
+                    Expanded(
+                      child: ListView.separated(
+                        controller: scrollController,
+                        itemCount: pelangganList.length,
+                        separatorBuilder: (_, __) => const Divider(),
+                        itemBuilder: (ctx2, i) {
+                          final p = pelangganList[i];
+                          return ListTile(
+                            leading: CircleAvatar(backgroundColor: c.primaryContainer, child: Text(p.nama.isNotEmpty ? p.nama[0].toUpperCase() : '?', style: TextStyle(color: c.onPrimaryContainer))),
+                            title: Text(p.nama, style: TextStyle(fontWeight: FontWeight.bold, color: c.onSurface)),
+                            subtitle: p.noHp != null ? Text(p.noHp!) : null,
+                            onTap: () {
+                              Navigator.pop(ctx);
+                              _prosesPembayaran('Utang', pelangganId: p.id, namaPelanggan: p.nama);
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showTambahPelangganUtangDialog() {
+    final c = AppColors.of(context);
+    final namaController = TextEditingController();
+    final hpController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Tambah Pelanggan Baru'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: namaController,
+              decoration: InputDecoration(
+                labelText: 'Nama Pelanggan',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              autofocus: true,
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: hpController,
+              decoration: InputDecoration(
+                labelText: 'Nomor HP (Opsional)',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              keyboardType: TextInputType.phone,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Batal', style: TextStyle(color: c.onSurfaceVariant)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: c.primary,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () async {
+              final nama = namaController.text.trim();
+              if (nama.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Nama pelanggan harus diisi!')),
+                );
+                return;
+              }
+
+              // Tutup dialog
+              Navigator.pop(ctx);
+
+              // Tampilkan loading (opsional, tapi karena cepat kita langsung panggil)
+              try {
+                final newPelanggan = await ref.read(utangProvider.notifier).tambahPelanggan(
+                  nama,
+                  0, // Nominal awal 0 karena utangnya dicatat dari total belanja
+                  noHp: hpController.text.trim(),
+                );
+                if (newPelanggan != null) {
+                  // Langsung proses pembayaran utang
+                  _prosesPembayaran('Utang', pelangganId: newPelanggan.id, namaPelanggan: newPelanggan.nama);
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Gagal menambah pelanggan: $e')),
+                  );
+                }
+              }
+            },
+            child: const Text('Simpan & Catat Utang'),
+          ),
+        ],
+      ),
+    );
   }
 
   int get _totalPrice =>
@@ -359,6 +459,7 @@ class _KasirScreenState extends ConsumerState<KasirScreen> {
           child: Container(color: c.outlineVariant, height: 1.0),
         ),
       ),
+      resizeToAvoidBottomInset: false,
       body: Column(
         children: [
           // Search / Scan Area
@@ -387,7 +488,40 @@ class _KasirScreenState extends ConsumerState<KasirScreen> {
                         border: InputBorder.none,
                       ),
                       style: TextStyle(color: c.onSurface, fontSize: 16),
-                      onSubmitted: (value) => _tambahKeKeranjang(value),
+                      onSubmitted: (value) {
+                        if (value.trim().isNotEmpty) {
+                          final semuaBarang = ref.read(barangProvider).semuaBarang;
+                          final foundBarang = semuaBarang.where((b) => 
+                            b.nama.toLowerCase() == value.trim().toLowerCase() || 
+                            (b.barcode != null && b.barcode == value.trim())
+                          ).toList();
+
+                          if (foundBarang.isNotEmpty) {
+                            final barang = foundBarang.first;
+                            setState(() {
+                              final index = _keranjang.indexWhere((item) =>
+                                  item['nama'].toString().toLowerCase() ==
+                                      barang.nama.toLowerCase());
+                              if (index >= 0) {
+                                _keranjang[index]['qty'] += 1;
+                              } else {
+                                _keranjang.add({
+                                  'id': barang.id,
+                                  'nama': barang.nama, 
+                                  'harga': barang.harga, 
+                                  'harga_modal': barang.hargaBeli,
+                                  'qty': 1
+                                });
+                              }
+                            });
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Barang tidak ditemukan!')),
+                            );
+                          }
+                          _searchController.clear();
+                        }
+                      },
                     ),
                   ),
                   Container(
@@ -404,12 +538,47 @@ class _KasirScreenState extends ConsumerState<KasirScreen> {
                           topRight: Radius.circular(8), bottomRight: Radius.circular(8),
                         ),
                         onTap: () async {
-                          var res = await SimpleBarcodeScanner.scanBarcode(
+                          final res = await Navigator.push(
                             context,
-                            cancelButtonText: 'Kembali',
+                            MaterialPageRoute(
+                              builder: (context) => const SimpleBarcodeScannerPage(),
+                            ),
                           );
-                          if (res is String && res != '-1' && res.isNotEmpty) {
-                            _tambahKeKeranjang(res);
+                          if (res is String && res != '-1') {
+                            _searchController.text = res;
+                            final value = res;
+                            if (value.trim().isNotEmpty) {
+                              final semuaBarang = ref.read(barangProvider).semuaBarang;
+                              final foundBarang = semuaBarang.where((b) => 
+                                b.nama.toLowerCase() == value.trim().toLowerCase() || 
+                                (b.barcode != null && b.barcode == value.trim())
+                              ).toList();
+
+                              if (foundBarang.isNotEmpty) {
+                                final barang = foundBarang.first;
+                                setState(() {
+                                  final index = _keranjang.indexWhere((item) =>
+                                      item['nama'].toString().toLowerCase() ==
+                                          barang.nama.toLowerCase());
+                                  if (index >= 0) {
+                                    _keranjang[index]['qty'] += 1;
+                                  } else {
+                                    _keranjang.add({
+                                      'id': barang.id,
+                                      'nama': barang.nama, 
+                                      'harga': barang.harga, 
+                                      'harga_modal': barang.hargaBeli,
+                                      'qty': 1
+                                    });
+                                  }
+                                });
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Barang tidak ditemukan!')),
+                                );
+                              }
+                              _searchController.clear();
+                            }
                           }
                         },
                         child: Icon(Icons.qr_code_scanner, color: c.primary),
@@ -470,30 +639,19 @@ class _KasirScreenState extends ConsumerState<KasirScreen> {
                       ),
                       child: _keranjang.isEmpty
                           ? Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(Icons.shopping_cart_checkout, size: 64, color: c.outlineVariant),
-                                  const SizedBox(height: 16),
-                                  Text('Keranjang masih kosong', style: TextStyle(color: c.outline, fontSize: 16)),
-                                  const SizedBox(height: 16),
-                                  ElevatedButton.icon(
-                                    onPressed: () {
-                                      // Arahkan kursor ke input pencarian saat tombol "Tambah Barang" diklik
-                                      FocusScope.of(context).requestFocus(FocusNode());
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(content: Text('Silakan cari nama barang di atas')),
-                                      );
-                                    },
-                                    icon: const Icon(Icons.add),
-                                    label: const Text('Tambah Barang'),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: c.primary,
-                                      foregroundColor: Colors.white,
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                    ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(16),
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(Icons.shopping_cart_checkout, size: 48, color: c.outlineVariant),
+                                      const SizedBox(height: 8),
+                                      Text('Keranjang masih kosong', style: TextStyle(color: c.outline, fontSize: 14)),
+                                    ],
                                   ),
-                                ],
+                                ),
                               ),
                             )
                           : ListView.separated(
@@ -570,7 +728,7 @@ class _KasirScreenState extends ConsumerState<KasirScreen> {
         ],
       ),
       bottomNavigationBar: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
         decoration: BoxDecoration(
           color: c.surface,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
@@ -586,48 +744,72 @@ class _KasirScreenState extends ConsumerState<KasirScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Total', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: c.onSurfaceVariant)),
-                  Text(_formatCurrency(_totalPrice), style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: c.primary)),
+                  Text('Total', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: c.onSurfaceVariant)),
+                  Text(_formatCurrency(_totalPrice), style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: c.primary)),
                 ],
               ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: c.primary, foregroundColor: Colors.white,
-                  minimumSize: const Size(double.infinity, 48),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)), elevation: 1,
+              const SizedBox(height: 10),
+              SizedBox(
+                height: 42,
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: c.primary, foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)), elevation: 1,
+                    padding: EdgeInsets.zero,
+                  ),
+                  onPressed: () => _prosesPembayaran('Tunai'),
+                  child: const Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                    Icon(Icons.payments, size: 20), SizedBox(width: 8),
+                    Text('Bayar Tunai', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                  ]),
                 ),
-                onPressed: () => _prosesPembayaran('Tunai'),
-                child: const Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  Icon(Icons.payments), SizedBox(width: 8),
-                  Text('Bayar Tunai', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                ]),
               ),
-              const SizedBox(height: 8),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: c.secondaryContainer, foregroundColor: c.onSecondaryContainer,
-                  minimumSize: const Size(double.infinity, 48),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)), elevation: 1,
-                ),
-                onPressed: _prosesPembayaranQRIS,
-                child: const Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  Icon(Icons.qr_code_2), SizedBox(width: 8),
-                  Text('Bayar QRIS', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                ]),
-              ),
-              const SizedBox(height: 8),
-              OutlinedButton(
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: c.secondary, side: BorderSide(color: c.secondary, width: 2),
-                  minimumSize: const Size(double.infinity, 48),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                ),
-                onPressed: _showCatatUtangDialog,
-                child: const Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  Icon(Icons.menu_book), SizedBox(width: 8),
-                  Text('Catat Utang', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                ]),
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  Expanded(
+                    child: SizedBox(
+                      height: 42,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: c.secondaryContainer, foregroundColor: c.onSecondaryContainer,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)), elevation: 1,
+                          padding: EdgeInsets.zero,
+                        ),
+                        onPressed: _isProcessingQRIS ? null : _prosesQRIS,
+                        child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                          if (_isProcessingQRIS) ...[
+                            const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)),
+                            const SizedBox(width: 6),
+                            const Text('Proses...', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                          ] else ...[
+                            const Icon(Icons.qr_code_2, size: 20), const SizedBox(width: 6),
+                            const Text('QRIS', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                          ]
+                        ]),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: SizedBox(
+                      height: 42,
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: c.secondary, side: BorderSide(color: c.secondary, width: 2),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          padding: EdgeInsets.zero,
+                        ),
+                        onPressed: _showCatatUtangSheet,
+                        child: const Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                          Icon(Icons.menu_book, size: 20), SizedBox(width: 6),
+                          Text('Utang', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                        ]),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

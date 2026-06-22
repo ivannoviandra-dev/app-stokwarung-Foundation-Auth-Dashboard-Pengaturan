@@ -61,52 +61,36 @@ class _RiwayatUtangScreenState extends ConsumerState<RiwayatUtangScreen> {
             return Center(child: CircularProgressIndicator(color: c.primary));
           }
           if (snapshot.hasError) {
-            return Center(
-              child: Text(
-                'Terjadi kesalahan memuat data',
-                style: TextStyle(color: c.statusCritical),
-              ),
-            );
+            return Center(child: Text('Terjadi kesalahan memuat data', style: TextStyle(color: c.statusCritical)));
           }
-
+          
           final riwayat = snapshot.data ?? [];
-
+          
           if (riwayat.isEmpty) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.history_toggle_off,
-                    size: 64,
-                    color: c.outlineVariant,
-                  ),
+                  Icon(Icons.history_toggle_off, size: 64, color: c.outlineVariant),
                   const SizedBox(height: 16),
-                  Text(
-                    'Belum ada riwayat transaksi.',
-                    style: TextStyle(color: c.onSurfaceVariant),
-                  ),
+                  Text('Belum ada riwayat transaksi.', style: TextStyle(color: c.onSurfaceVariant)),
                 ],
               ),
             );
           }
-
+          
           return ListView.separated(
             padding: const EdgeInsets.all(16.0),
             itemCount: riwayat.length,
-            separatorBuilder: (_, _) => const SizedBox(height: 12),
+            separatorBuilder: (_, __) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
               final item = riwayat[index];
               final isBayar = item['jenis'] == 'bayar';
-              final pelanggan = item['pelanggan'] != null
-                  ? item['pelanggan']['nama']
-                  : 'Unknown';
-              final tanggal = DateTime.parse(
-                item['tanggal'],
-              ).toLocal().toString().split('.')[0];
+              final pelanggan = item['pelanggan'] != null ? item['pelanggan']['nama'] : 'Unknown';
+              final tanggal = DateTime.parse(item['tanggal']).toLocal().toString().split('.')[0];
               final jumlah = item['jumlah'] as int;
               final keterangan = item['keterangan'] as String?;
-
+              
               return Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -120,9 +104,7 @@ class _RiwayatUtangScreenState extends ConsumerState<RiwayatUtangScreen> {
                       width: 48,
                       height: 48,
                       decoration: BoxDecoration(
-                        color: isBayar
-                            ? c.statusSuccess.withValues(alpha: 0.1)
-                            : c.statusCritical.withValues(alpha: 0.1),
+                        color: isBayar ? c.statusSuccess.withValues(alpha: 0.1) : c.statusCritical.withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
@@ -149,9 +131,7 @@ class _RiwayatUtangScreenState extends ConsumerState<RiwayatUtangScreen> {
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
-                              color: isBayar
-                                  ? c.statusSuccess
-                                  : c.statusCritical,
+                              color: isBayar ? c.statusSuccess : c.statusCritical,
                             ),
                           ),
                           const SizedBox(height: 4),

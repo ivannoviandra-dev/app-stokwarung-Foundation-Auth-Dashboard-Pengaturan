@@ -145,12 +145,9 @@ class _BayarUtangScreenState extends ConsumerState<BayarUtangScreen> {
   Future<void> _simpanViaQRIS() async {
     final orderId = 'UTG-${DateTime.now().millisecondsSinceEpoch}';
 
-    // Tampilkan loading
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => const Center(child: CircularProgressIndicator()),
-    );
+    setState(() {
+      _isSaving = true;
+    });
 
     try {
       // 1. Buat Snap Token
@@ -169,7 +166,6 @@ class _BayarUtangScreenState extends ConsumerState<BayarUtangScreen> {
       );
 
       if (!mounted) return;
-      Navigator.pop(context); // tutup loading
 
       final redirectUrl = snapResult['redirect_url']!;
 
@@ -205,13 +201,18 @@ class _BayarUtangScreenState extends ConsumerState<BayarUtangScreen> {
       }
     } catch (e) {
       if (mounted) {
-        Navigator.pop(context); // tutup loading
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error: $e'),
             backgroundColor: Colors.red,
           ),
         );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSaving = false;
+        });
       }
     }
   }

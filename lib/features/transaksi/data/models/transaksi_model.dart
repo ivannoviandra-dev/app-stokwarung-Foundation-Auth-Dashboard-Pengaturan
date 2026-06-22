@@ -49,6 +49,7 @@ class Transaksi {
       'metode': metode,
       if (namaPelanggan != null) 'nama_pelanggan': namaPelanggan,
       if (catatan != null) 'catatan': catatan,
+      if (midtransOrderId != null) 'midtrans_order_id': midtransOrderId,
     };
   }
 }

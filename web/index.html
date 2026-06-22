@@ -31,6 +31,21 @@
 
   <title>stokwarung</title>
   <link rel="manifest" href="manifest.json">
+
+  <!-- Midtrans Snap.js Sandbox -->
+  <script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="Mid-client-CyW1GyJqKIUCur1n"></script>
+  <script>
+    // Helper function dipanggil dari Dart untuk membuat Snap Token via fetch
+    // menggunakan CORS proxy karena browser tidak bisa langsung hit Midtrans server API
+    function openMidtransSnap(token, onSuccess, onPending, onError, onClose) {
+      window.snap.pay(token, {
+        onSuccess: function(result) { onSuccess(JSON.stringify(result)); },
+        onPending: function(result) { onPending(JSON.stringify(result)); },
+        onError: function(result) { onError(JSON.stringify(result)); },
+        onClose: function() { onClose(); }
+      });
+    }
+  </script>
 </head>
 <body>
   <!--

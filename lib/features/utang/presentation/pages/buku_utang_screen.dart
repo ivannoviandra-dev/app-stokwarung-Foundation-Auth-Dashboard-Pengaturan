@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'bayar_utang_screen.dart';
 import '../../../reminder/presentation/pages/notifications_screen.dart';
 import '../providers/utang_provider.dart';
+import '../../data/models/pelanggan_model.dart';
 import 'riwayat_utang_screen.dart';
 
 class BukuUtangScreen extends ConsumerStatefulWidget {
@@ -35,24 +36,18 @@ class _BukuUtangScreenState extends ConsumerState<BukuUtangScreen> {
   Color _getAvatarColor(String nama, AppColors c) {
     int hash = nama.codeUnits.fold(0, (a, b) => a + b);
     switch (hash % 3) {
-      case 0:
-        return c.primaryContainer;
-      case 1:
-        return c.tertiaryContainer;
-      default:
-        return c.secondaryContainer;
+      case 0: return c.primaryContainer;
+      case 1: return c.tertiaryContainer;
+      default: return c.secondaryContainer;
     }
   }
 
   Color _getTextColor(String nama, AppColors c) {
     int hash = nama.codeUnits.fold(0, (a, b) => a + b);
     switch (hash % 3) {
-      case 0:
-        return c.onPrimaryContainer;
-      case 1:
-        return c.onTertiaryContainer;
-      default:
-        return c.onSecondaryContainer;
+      case 0: return c.onPrimaryContainer;
+      case 1: return c.onTertiaryContainer;
+      default: return c.onSecondaryContainer;
     }
   }
 
@@ -71,10 +66,7 @@ class _BukuUtangScreenState extends ConsumerState<BukuUtangScreen> {
       builder: (context) {
         return AlertDialog(
           backgroundColor: c.surfaceContainerLow,
-          title: Text(
-            'Tambah Pelanggan Baru',
-            style: TextStyle(color: c.onSurface),
-          ),
+          title: Text('Tambah Pelanggan Baru', style: TextStyle(color: c.onSurface)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -112,25 +104,16 @@ class _BukuUtangScreenState extends ConsumerState<BukuUtangScreen> {
               child: Text('Batal', style: TextStyle(color: c.onSurfaceVariant)),
             ),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: c.primary,
-                foregroundColor: Colors.white,
-              ),
+              style: ElevatedButton.styleFrom(backgroundColor: c.primary, foregroundColor: Colors.white),
               onPressed: () async {
                 if (nameController.text.isNotEmpty) {
-                  final nominalAwal =
-                      int.tryParse(
-                        amountController.text.replaceAll(RegExp(r'[^0-9]'), ''),
-                      ) ??
-                      0;
+                  final nominalAwal = int.tryParse(amountController.text.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
                   try {
-                    await ref
-                        .read(utangProvider.notifier)
-                        .tambahPelanggan(
-                          nameController.text,
-                          nominalAwal,
-                          noHp: phoneController.text,
-                        );
+                    await ref.read(utangProvider.notifier).tambahPelanggan(
+                      nameController.text, 
+                      nominalAwal,
+                      noHp: phoneController.text,
+                    );
                     if (mounted) Navigator.pop(context);
                   } catch (e) {
                     if (mounted) {
@@ -149,42 +132,28 @@ class _BukuUtangScreenState extends ConsumerState<BukuUtangScreen> {
     );
   }
 
-  void _showDeleteDialog(
-    String pelangganId,
-    String namaPelanggan,
-    AppColors c,
-  ) {
+  void _showDeleteDialog(String pelangganId, String namaPelanggan, AppColors c) {
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
           backgroundColor: c.surfaceContainerLow,
           title: Text('Hapus Pelanggan', style: TextStyle(color: c.onSurface)),
-          content: Text(
-            'Apakah Anda yakin ingin menghapus $namaPelanggan dari daftar utang? Semua riwayat utangnya akan ikut terhapus.',
-            style: TextStyle(color: c.onSurfaceVariant),
-          ),
+          content: Text('Apakah Anda yakin ingin menghapus $namaPelanggan dari daftar utang? Semua riwayat utangnya akan ikut terhapus.', style: TextStyle(color: c.onSurfaceVariant)),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
               child: Text('Batal', style: TextStyle(color: c.onSurfaceVariant)),
             ),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: c.statusCritical,
-                foregroundColor: Colors.white,
-              ),
+              style: ElevatedButton.styleFrom(backgroundColor: c.statusCritical, foregroundColor: Colors.white),
               onPressed: () async {
                 try {
-                  await ref
-                      .read(utangProvider.notifier)
-                      .hapusPelanggan(pelangganId);
+                  await ref.read(utangProvider.notifier).hapusPelanggan(pelangganId);
                   if (mounted) {
                     Navigator.pop(context);
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Pelanggan berhasil dihapus'),
-                      ),
+                      const SnackBar(content: Text('Pelanggan berhasil dihapus')),
                     );
                   }
                 } catch (e) {
@@ -220,8 +189,7 @@ class _BukuUtangScreenState extends ConsumerState<BukuUtangScreen> {
     final totalPiutang = utangState.totalPiutangKeseluruhan;
     final aktifCount = utangState.pelangganAktifCount;
 
-    final userMetadata =
-        Supabase.instance.client.auth.currentUser?.userMetadata;
+    final userMetadata = Supabase.instance.client.auth.currentUser?.userMetadata;
     final namaToko = userMetadata?['nama_toko'] as String? ?? 'Warung Saya';
 
     return Scaffold(
@@ -288,7 +256,10 @@ class _BukuUtangScreenState extends ConsumerState<BukuUtangScreen> {
                 const SizedBox(height: 4),
                 Text(
                   'Kelola piutang pelanggan dengan mudah.',
-                  style: TextStyle(fontSize: 14, color: c.onSurfaceVariant),
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: c.onSurfaceVariant,
+                  ),
                 ),
                 const SizedBox(height: 24),
 
@@ -361,10 +332,7 @@ class _BukuUtangScreenState extends ConsumerState<BukuUtangScreen> {
                           controller: _searchController,
                           decoration: InputDecoration(
                             hintText: 'Cari nama pelanggan...',
-                            hintStyle: TextStyle(
-                              color: c.outline,
-                              fontSize: 14,
-                            ),
+                            hintStyle: TextStyle(color: c.outline, fontSize: 14),
                             border: InputBorder.none,
                           ),
                         ),
@@ -398,150 +366,125 @@ class _BukuUtangScreenState extends ConsumerState<BukuUtangScreen> {
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       itemCount: filteredPelanggan.length,
-                      separatorBuilder: (context, index) =>
-                          Divider(height: 1, color: c.outlineVariant),
+                      separatorBuilder: (context, index) => Divider(height: 1, color: c.outlineVariant),
                       itemBuilder: (context, index) {
                         final item = filteredPelanggan[index];
-                        final inisial = item.nama.isNotEmpty
-                            ? item.nama[0].toUpperCase()
-                            : '?';
-
+                        final inisial = item.nama.isNotEmpty ? item.nama[0].toUpperCase() : '?';
+                        
                         return InkWell(
                           onTap: () {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) =>
-                                    BayarUtangScreen(pelanggan: item),
+                                builder: (_) => BayarUtangScreen(pelanggan: item),
                               ),
                             );
                           },
                           child: Padding(
                             padding: const EdgeInsets.all(16.0),
                             child: Row(
-                              children: [
-                                // Avatar
-                                Container(
-                                  width: 48,
-                                  height: 48,
-                                  decoration: BoxDecoration(
-                                    color: _getAvatarColor(item.nama, c),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  alignment: Alignment.center,
-                                  child: Text(
-                                    inisial,
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: _getTextColor(item.nama, c),
-                                    ),
+                            children: [
+                              // Avatar
+                              Container(
+                                width: 48,
+                                height: 48,
+                                decoration: BoxDecoration(
+                                  color: _getAvatarColor(item.nama, c),
+                                  shape: BoxShape.circle,
+                                ),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  inisial,
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: _getTextColor(item.nama, c),
                                   ),
                                 ),
-                                const SizedBox(width: 12),
-
-                                // Details
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        item.nama,
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600,
-                                          color: c.onSurface,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        item.totalUtang > 0
-                                            ? 'Ada utang belum lunas'
-                                            : 'Utang lunas',
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          color: item.totalUtang > 0
-                                              ? c.statusCritical
-                                              : c.primary,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-
-                                // Amount & Action
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
+                              ),
+                              const SizedBox(width: 12),
+                              
+                              // Details
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      _formatCurrency(item.totalUtang),
+                                      item.nama,
                                       style: TextStyle(
                                         fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        color: item.totalUtang > 0
-                                            ? c.statusCritical
-                                            : c.onSurfaceVariant,
+                                        fontWeight: FontWeight.w600,
+                                        color: c.onSurface,
                                       ),
                                     ),
-                                    const SizedBox(height: 4),
-                                    if (item.totalUtang <= 0)
-                                      InkWell(
-                                        onTap: () => _showDeleteDialog(
-                                          item.id,
-                                          item.nama,
-                                          c,
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      item.totalUtang > 0 ? 'Ada utang belum lunas' : 'Utang lunas',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: item.totalUtang > 0 ? c.statusCritical : c.primary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              
+                              // Amount & Action
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    _formatCurrency(item.totalUtang),
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: item.totalUtang > 0 ? c.statusCritical : c.onSurfaceVariant,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  if (item.totalUtang <= 0)
+                                    InkWell(
+                                      onTap: () => _showDeleteDialog(item.id, item.nama, c),
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                        decoration: BoxDecoration(
+                                          color: c.statusCritical.withValues(alpha: 0.1),
+                                          borderRadius: BorderRadius.circular(4),
                                         ),
-                                        child: Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 12,
-                                            vertical: 6,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: c.statusCritical.withValues(
-                                              alpha: 0.1,
-                                            ),
-                                            borderRadius: BorderRadius.circular(
-                                              4,
-                                            ),
-                                          ),
-                                          child: Text(
-                                            'Hapus',
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.w600,
-                                              color: c.statusCritical,
-                                            ),
-                                          ),
-                                        ),
-                                      )
-                                    else
-                                      InkWell(
-                                        onTap: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (_) => BayarUtangScreen(
-                                                pelanggan: item,
-                                              ),
-                                            ),
-                                          );
-                                        },
                                         child: Text(
-                                          'Catat Bayar',
+                                          'Hapus',
                                           style: TextStyle(
                                             fontSize: 12,
                                             fontWeight: FontWeight.w600,
-                                            color: c.primary,
+                                            color: c.statusCritical,
                                           ),
                                         ),
                                       ),
-                                  ],
-                                ),
-                              ],
-                            ),
+                                    )
+                                  else
+                                    InkWell(
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) => BayarUtangScreen(pelanggan: item),
+                                          ),
+                                        );
+                                      },
+                                      child: Text(
+                                        'Catat Bayar',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                          color: c.primary,
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ],
                           ),
-                        );
+                        ));
                       },
                     ),
                   ),
@@ -555,10 +498,7 @@ class _BukuUtangScreenState extends ConsumerState<BukuUtangScreen> {
         elevation: 4,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         icon: const Icon(Icons.person_add),
-        label: const Text(
-          'Tambah Pelanggan',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
+        label: const Text('Tambah Pelanggan', style: TextStyle(fontWeight: FontWeight.bold)),
       ),
     );
   }

@@ -1,41 +1,46 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
   factory NotificationService() => _instance;
   NotificationService._internal();
 
-  final FlutterLocalNotificationsPlugin _plugin = FlutterLocalNotificationsPlugin();
-  bool _isInitialized = false;
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
 
   Future<void> init() async {
-    if (_isInitialized) return;
+    const AndroidInitializationSettings initializationSettingsAndroid =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
 
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
-    const iosSettings = DarwinInitializationSettings(
+    // Untuk iOS, kita juga setup initialization, tapi di StokWarung target utamanya Android
+    const DarwinInitializationSettings initializationSettingsIOS =
+        DarwinInitializationSettings(
       requestAlertPermission: true,
       requestBadgePermission: true,
       requestSoundPermission: true,
     );
 
-    const initSettings = InitializationSettings(
-      android: androidSettings,
-      iOS: iosSettings,
+    const InitializationSettings initializationSettings = InitializationSettings(
+      android: initializationSettingsAndroid,
+      iOS: initializationSettingsIOS,
     );
 
-    await _plugin.initialize(settings: initSettings);
-    _isInitialized = true;
+    await flutterLocalNotificationsPlugin.initialize(
+      settings: initializationSettings,
+      onDidReceiveNotificationResponse: (NotificationResponse response) {
+        // Handle saat notifikasi diklik jika perlu
+      },
+    );
 
-    // Request permission for Android 13+
-    await _requestPermissions();
+    // Minta izin notifikasi (terutama untuk Android 13+)
+    await _requestPermission();
   }
 
-  Future<void> _requestPermissions() async {
-    final androidPlugin = _plugin.resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>();
-    if (androidPlugin != null) {
-      await androidPlugin.requestNotificationsPermission();
+  Future<void> _requestPermission() async {
+    final status = await Permission.notification.status;
+    if (status.isDenied) {
+      await Permission.notification.request();
     }
   }
 
@@ -44,58 +49,37 @@ class NotificationService {
     required String title,
     required String body,
   }) async {
-    const androidDetails = AndroidNotificationDetails(
-      'stokwarung_alerts',
+    const AndroidNotificationDetails androidPlatformChannelSpecifics =
+        AndroidNotificationDetails(
+      'stokwarung_channel_id',
       'Peringatan StokWarung',
-      channelDescription: 'Notifikasi untuk stok rendah dan kedaluwarsa',
-      importance: Importance.high,
+      channelDescription: 'Notifikasi untuk peringatan stok dan kedaluwarsa',
+      importance: Importance.max,
       priority: Priority.high,
-      icon: '@mipmap/ic_launcher',
-      color: Color(0xFF10A87A),
-      styleInformation: BigTextStyleInformation(''),
+      showWhen: true,
+      enableVibration: true,
     );
 
-    const iosDetails = DarwinNotificationDetails(
-      presentAlert: true,
-      presentBadge: true,
-      presentSound: true,
+    const NotificationDetails platformChannelSpecifics = NotificationDetails(
+      android: androidPlatformChannelSpecifics,
+      iOS: DarwinNotificationDetails(),
     );
 
-    const details = NotificationDetails(
-      android: androidDetails,
-      iOS: iosDetails,
+    await flutterLocalNotificationsPlugin.show(
+      id: id,
+      title: title,
+      body: body,
+      notificationDetails: platformChannelSpecifics,
     );
-
-    await _plugin.show(id: id, title: title, body: body, notificationDetails: details);
   }
 
-  /// Kirim notifikasi batch untuk semua peringatan stok & kedaluwarsa
-  Future<void> sendAlertNotifications({
-    required List<Map<String, String>> alerts,
-  }) async {
-    // Kirim satu notifikasi ringkasan
-    if (alerts.isEmpty) return;
-
-    final stokAlerts = alerts.where((a) => a['type']!.startsWith('stok')).length;
-    final expAlerts = alerts.where((a) => a['type']!.startsWith('kadaluarsa')).length;
-
-    final parts = <String>[];
-    if (stokAlerts > 0) parts.add('$stokAlerts barang stok rendah/habis');
-    if (expAlerts > 0) parts.add('$expAlerts barang mendekati/sudah kedaluwarsa');
-
-    await showNotification(
-      id: 0,
-      title: '⚠️ Peringatan StokWarung',
-      body: 'Perlu perhatian: ${parts.join(', ')}. Buka aplikasi untuk detail.',
-    );
-
-    // Kirim detail per item (max 5 agar tidak spam)
-    final limited = alerts.take(5).toList();
-    for (var i = 0; i < limited.length; i++) {
+  Future<void> sendAlertNotifications({required List<Map<String, String>> alerts}) async {
+    for (int i = 0; i < alerts.length; i++) {
+      final alert = alerts[i];
       await showNotification(
-        id: i + 1,
-        title: limited[i]['title']!,
-        body: limited[i]['body']!,
+        id: alert['title'].hashCode,
+        title: alert['title'] ?? 'Peringatan',
+        body: alert['body'] ?? '',
       );
     }
   }

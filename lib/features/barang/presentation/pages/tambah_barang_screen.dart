@@ -4,6 +4,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../data/models/barang_model.dart';
 import '../providers/barang_provider.dart';
 import 'package:simple_barcode_scanner/simple_barcode_scanner.dart';
+
 class TambahBarangScreen extends ConsumerStatefulWidget {
   const TambahBarangScreen({super.key});
 
@@ -194,17 +195,10 @@ class _TambahBarangScreenState extends ConsumerState<TambahBarangScreen> {
         ),
         const SizedBox(height: 4),
         DropdownButtonFormField<String>(
-          isExpanded: true,
           value: value,
           onChanged: onChanged,
           items: items
-              .map((e) => DropdownMenuItem(
-                    value: e,
-                    child: Text(
-                      e,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ))
+              .map((e) => DropdownMenuItem(value: e, child: Text(e)))
               .toList(),
           style: TextStyle(fontSize: 14, color: c.onSurface),
           decoration: InputDecoration(
@@ -312,11 +306,13 @@ class _TambahBarangScreenState extends ConsumerState<TambahBarangScreen> {
                       suffixIcon: IconButton(
                         icon: Icon(Icons.qr_code_scanner, color: c.primary),
                         onPressed: () async {
-                          var res = await SimpleBarcodeScanner.scanBarcode(
+                          final res = await Navigator.push(
                             context,
-                            cancelButtonText: 'Kembali',
+                            MaterialPageRoute(
+                              builder: (context) => const SimpleBarcodeScannerPage(),
+                            ),
                           );
-                          if (res is String && res != '-1' && res.isNotEmpty) {
+                          if (res is String && res != '-1') {
                             setState(() {
                               _barcodeController.text = res;
                             });

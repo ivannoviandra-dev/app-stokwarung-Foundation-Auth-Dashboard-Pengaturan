@@ -116,17 +116,17 @@ class UtangNotifier extends Notifier<UtangState> {
     state = state.copyWith(searchQuery: query);
   }
 
-  Future<void> tambahPelanggan(String nama, int nominalAwal, {String? noHp}) async {
+  Future<Pelanggan?> tambahPelanggan(String nama, int nominalAwal, {String? noHp}) async {
     try {
       state = state.copyWith(isLoading: true);
       final user = _supabase.auth.currentUser;
-      if (user == null) return;
+      if (user == null) return null;
 
       final userRole = user.userMetadata?['role'] as String?;
       final String targetUserId;
       if (userRole == 'kasir') {
         final ownerId = user.userMetadata?['owner_id'] as String?;
-        if (ownerId == null) return;
+        if (ownerId == null) return null;
         targetUserId = ownerId;
       } else {
         targetUserId = user.id;
@@ -153,6 +153,7 @@ class UtangNotifier extends Notifier<UtangState> {
           'pelanggan_id': newPelanggan.id,
           'jumlah': nominalAwal,
           'jenis': 'utang',
+          'tanggal': DateTime.now().toIso8601String(),
           'keterangan': 'Utang awal',
         };
         await _supabase.from('utang').insert(dataUtang);
@@ -163,6 +164,7 @@ class UtangNotifier extends Notifier<UtangState> {
         pelangganList: [...state.pelangganList, newPelanggan],
         isLoading: false,
       );
+      return newPelanggan;
     } catch (e) {
       print('Error tambah pelanggan: $e');
       state = state.copyWith(isLoading: false);
@@ -180,10 +182,16 @@ class UtangNotifier extends Notifier<UtangState> {
     try {
       state = state.copyWith(isLoading: true);
 
+      final user = _supabase.auth.currentUser;
+      final targetUserId = user?.userMetadata?['role'] == 'kasir'
+          ? (user?.userMetadata?['owner_id'] as String?)
+          : user?.id;
+
       final dataUtang = {
         'pelanggan_id': pelangganId,
         'jumlah': jumlah,
         'jenis': jenis,
+        'tanggal': DateTime.now().toIso8601String(),
         if (keterangan != null && keterangan.isNotEmpty) 'keterangan': keterangan,
       };
 

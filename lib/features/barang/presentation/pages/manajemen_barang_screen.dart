@@ -7,6 +7,7 @@ import '../providers/barang_provider.dart';
 import 'tambah_barang_screen.dart';
 import '../../../reminder/presentation/pages/notifications_screen.dart';
 import 'package:simple_barcode_scanner/simple_barcode_scanner.dart';
+
 class ManajemenBarangScreen extends ConsumerStatefulWidget {
   const ManajemenBarangScreen({super.key});
 
@@ -90,13 +91,15 @@ class _ManajemenBarangScreenState extends ConsumerState<ManajemenBarangScreen> {
             heroTag: 'scan_fab',
             backgroundColor: primaryGreen,
             onPressed: () async {
-              var res = await SimpleBarcodeScanner.scanBarcode(
+              final res = await Navigator.push(
                 context,
-                cancelButtonText: 'Kembali',
+                MaterialPageRoute(
+                  builder: (context) => const SimpleBarcodeScannerPage(),
+                ),
               );
-              if (res is String && res != '-1' && res.isNotEmpty) {
-                _searchController.text = res;
+              if (res is String && res != '-1') {
                 barangNotifier.setSearch(res);
+                _searchController.text = res;
               }
             },
             child: Icon(Icons.qr_code_scanner, color: c.surface),

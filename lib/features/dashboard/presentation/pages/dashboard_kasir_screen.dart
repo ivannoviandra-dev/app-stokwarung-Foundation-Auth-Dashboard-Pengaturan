@@ -7,14 +7,14 @@ import '../../../../features/kasir/presentation/pages/kasir_screen.dart';
 import '../../../../features/utang/presentation/pages/buku_utang_screen.dart';
 import '../../../../features/pengaturan/presentation/pages/pengaturan_kasir_screen.dart';
 import '../../../../features/reminder/presentation/pages/notifications_screen.dart';
+import '../../../../features/transaksi/presentation/providers/transaksi_provider.dart';
 import '../providers/dashboard_provider.dart';
 
 class DashboardKasirScreen extends ConsumerStatefulWidget {
   const DashboardKasirScreen({super.key});
 
   @override
-  ConsumerState<DashboardKasirScreen> createState() =>
-      _DashboardKasirScreenState();
+  ConsumerState<DashboardKasirScreen> createState() => _DashboardKasirScreenState();
 }
 
 class _DashboardKasirScreenState extends ConsumerState<DashboardKasirScreen> {
@@ -46,8 +46,7 @@ class _DashboardKasirScreenState extends ConsumerState<DashboardKasirScreen> {
   @override
   Widget build(BuildContext context) {
     final c = AppColors.of(context);
-    final userMetadata =
-        Supabase.instance.client.auth.currentUser?.userMetadata;
+    final userMetadata = Supabase.instance.client.auth.currentUser?.userMetadata;
     final namaToko = userMetadata?['nama_toko'] as String? ?? 'Warung Saya';
     final dashboardData = ref.watch(dashboardProvider);
 
@@ -60,10 +59,7 @@ class _DashboardKasirScreenState extends ConsumerState<DashboardKasirScreen> {
           // Index 0: Beranda
           SingleChildScrollView(
             child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 24.0,
-                vertical: 16.0,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -92,7 +88,7 @@ class _DashboardKasirScreenState extends ConsumerState<DashboardKasirScreen> {
                   const SizedBox(height: 24),
 
                   // Recent Activity Feed
-                  _buildRecentActivity(c),
+                  _buildRecentActivity(c, ref),
                   const SizedBox(height: 24),
 
                   // Tip Card
@@ -138,22 +134,8 @@ class _DashboardKasirScreenState extends ConsumerState<DashboardKasirScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Text(
-              'Profil',
-              style: TextStyle(
-                color: c.greyText,
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            Text(
-              'Kasir',
-              style: TextStyle(
-                color: c.primaryGreen,
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            Text('Profil', style: TextStyle(color: c.greyText, fontSize: 10, fontWeight: FontWeight.w600)),
+            Text('Kasir', style: TextStyle(color: c.primaryGreen, fontSize: 12, fontWeight: FontWeight.bold)),
           ],
         ),
         const SizedBox(width: 12),
@@ -213,28 +195,17 @@ class _DashboardKasirScreenState extends ConsumerState<DashboardKasirScreen> {
                 color: Colors.white.withOpacity(0.2),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
-                Icons.point_of_sale,
-                color: Colors.white,
-                size: 32,
-              ),
+              child: const Icon(Icons.point_of_sale, color: Colors.white, size: 32),
             ),
             const SizedBox(height: 16),
             const Text(
               'Mulai Transaksi',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 4),
             Text(
               'Buka mesin kasir sekarang',
-              style: TextStyle(
-                color: Colors.white.withOpacity(0.9),
-                fontSize: 14,
-              ),
+              style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 14),
             ),
           ],
         ),
@@ -271,30 +242,13 @@ class _DashboardKasirScreenState extends ConsumerState<DashboardKasirScreen> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'TRANSAKSI HARI INI',
-                        style: TextStyle(
-                          color: c.greyText,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
+                      Text('TRANSAKSI HARI INI', style: TextStyle(color: c.greyText, fontSize: 12, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
                       RichText(
                         text: TextSpan(
                           style: TextStyle(color: c.darkText),
                           children: [
-                            TextSpan(
-                              text: '${data.totalTransaksi} ',
-                              style: const TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const TextSpan(
-                              text: 'Pesanan',
-                              style: TextStyle(fontSize: 14),
-                            ),
+                            TextSpan(text: '${data.totalTransaksi} ', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                            const TextSpan(text: 'Pesanan', style: TextStyle(fontSize: 14)),
                           ],
                         ),
                       ),
@@ -310,11 +264,7 @@ class _DashboardKasirScreenState extends ConsumerState<DashboardKasirScreen> {
                 ),
                 child: Text(
                   '+${_formatCurrency(data.totalPenjualanHariIni)}',
-                  style: TextStyle(
-                    color: c.statusSuccess,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(color: c.statusSuccess, fontSize: 12, fontWeight: FontWeight.bold),
                 ),
               ),
             ],
@@ -388,11 +338,7 @@ class _DashboardKasirScreenState extends ConsumerState<DashboardKasirScreen> {
             const SizedBox(height: 12),
             Text(
               title,
-              style: TextStyle(
-                color: c.darkText,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(color: c.darkText, fontSize: 16, fontWeight: FontWeight.bold),
             ),
           ],
         ),
@@ -400,7 +346,10 @@ class _DashboardKasirScreenState extends ConsumerState<DashboardKasirScreen> {
     );
   }
 
-  Widget _buildRecentActivity(AppColors c) {
+  Widget _buildRecentActivity(AppColors c, WidgetRef ref) {
+    final transaksiState = ref.watch(transaksiProvider);
+    final riwayat = transaksiState.transaksiHariIni.take(3).toList();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -409,11 +358,7 @@ class _DashboardKasirScreenState extends ConsumerState<DashboardKasirScreen> {
           children: [
             Text(
               'Aktivitas Terakhir',
-              style: TextStyle(
-                color: c.darkText,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(color: c.darkText, fontSize: 18, fontWeight: FontWeight.bold),
             ),
             InkWell(
               onTap: () => _showRiwayatSheet(context),
@@ -422,41 +367,54 @@ class _DashboardKasirScreenState extends ConsumerState<DashboardKasirScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                 child: Text(
                   'Lihat Semua',
-                  style: TextStyle(
-                    color: c.primaryGreen,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: TextStyle(color: c.primaryGreen, fontSize: 12, fontWeight: FontWeight.w600),
                 ),
               ),
             ),
           ],
         ),
         const SizedBox(height: 12),
-        Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: c.cardColor,
-            border: Border.all(color: c.outlineVariant),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Center(
-            child: Column(
-              children: [
-                Icon(
-                  Icons.receipt_long_outlined,
-                  size: 40,
-                  color: c.outlineVariant,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Belum ada aktivitas',
-                  style: TextStyle(color: c.greyText, fontSize: 14),
-                ),
-              ],
+        if (riwayat.isEmpty)
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: c.cardColor,
+              border: Border.all(color: c.outlineVariant),
+              borderRadius: BorderRadius.circular(12),
             ),
+            child: Center(
+              child: Column(
+                children: [
+                  Icon(Icons.receipt_long_outlined, size: 40, color: c.outlineVariant),
+                  const SizedBox(height: 8),
+                  Text('Belum ada aktivitas', style: TextStyle(color: c.greyText, fontSize: 14)),
+                ],
+              ),
+            ),
+          )
+        else
+          Column(
+            children: riwayat.map((t) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8.0),
+                child: _buildActivityItem(
+                  c: c,
+                  title: 'Transaksi #${t.id.substring(0, 5)}',
+                  timeInfo: '${t.createdAt.toLocal().hour.toString().padLeft(2, '0')}:${t.createdAt.toLocal().minute.toString().padLeft(2, '0')} • ${t.metode}',
+                  amount: _formatCurrency(t.total),
+                  icon: Icons.receipt_long_outlined,
+                  amountColor: c.statusSuccess,
+                  onTap: () => _showDetailTransaksi(
+                    context, c,
+                    'Transaksi #${t.id.substring(0, 5)}',
+                    '${t.createdAt.toLocal().hour.toString().padLeft(2, '0')}:${t.createdAt.toLocal().minute.toString().padLeft(2, '0')}',
+                    t.metode,
+                    _formatCurrency(t.total),
+                  ),
+                ),
+              );
+            }).toList(),
           ),
-        ),
       ],
     );
   }
@@ -498,31 +456,14 @@ class _DashboardKasirScreenState extends ConsumerState<DashboardKasirScreen> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        color: c.darkText,
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    Text(title, style: TextStyle(color: c.darkText, fontSize: 14, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 4),
-                    Text(
-                      timeInfo,
-                      style: TextStyle(color: c.greyText, fontSize: 12),
-                    ),
+                    Text(timeInfo, style: TextStyle(color: c.greyText, fontSize: 12)),
                   ],
                 ),
               ],
             ),
-            Text(
-              amount,
-              style: TextStyle(
-                color: amountColor,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            Text(amount, style: TextStyle(color: amountColor, fontSize: 16, fontWeight: FontWeight.bold)),
           ],
         ),
       ),
@@ -537,9 +478,7 @@ class _DashboardKasirScreenState extends ConsumerState<DashboardKasirScreen> {
             content: const Text('💡 Tips disimpan!'),
             backgroundColor: c.secondary,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           ),
         );
       },
@@ -559,30 +498,19 @@ class _DashboardKasirScreenState extends ConsumerState<DashboardKasirScreen> {
                 children: [
                   const Text(
                     'Tips Hari Ini',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Selalu cek stok barang yang paling laku setiap sore hari agar tidak kehabisan.',
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.8),
-                      fontSize: 12,
-                    ),
+                    style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 12),
                   ),
                 ],
               ),
             ),
             Expanded(
               flex: 1,
-              child: Icon(
-                Icons.lightbulb,
-                color: Colors.white.withOpacity(0.2),
-                size: 80,
-              ),
+              child: Icon(Icons.lightbulb, color: Colors.white.withOpacity(0.2), size: 80),
             ),
           ],
         ),
@@ -593,7 +521,17 @@ class _DashboardKasirScreenState extends ConsumerState<DashboardKasirScreen> {
   // ─── Riwayat Transaksi Bottom Sheet ───────────────────────────────
   void _showRiwayatSheet(BuildContext context) {
     final c = AppColors.of(context);
-    final List<Map<String, dynamic>> riwayat = [];
+    final transaksiState = ref.watch(transaksiProvider);
+    final riwayat = transaksiState.transaksiHariIni.map((t) {
+      return {
+        'title': 'Transaksi #${t.id.substring(0, 5)}',
+        'time': '${t.createdAt.toLocal().hour.toString().padLeft(2, '0')}:${t.createdAt.toLocal().minute.toString().padLeft(2, '0')}',
+        'metode': t.metode,
+        'amount': _formatCurrency(t.total),
+        'icon': Icons.receipt,
+        'color': c.statusSuccess,
+      };
+    }).toList();
 
     showModalBottomSheet(
       context: context,
@@ -616,8 +554,7 @@ class _DashboardKasirScreenState extends ConsumerState<DashboardKasirScreen> {
                   // Handle bar
                   Center(
                     child: Container(
-                      width: 40,
-                      height: 4,
+                      width: 40, height: 4,
                       margin: const EdgeInsets.only(bottom: 16),
                       decoration: BoxDecoration(
                         color: c.outlineVariant,
@@ -630,28 +567,17 @@ class _DashboardKasirScreenState extends ConsumerState<DashboardKasirScreen> {
                     children: [
                       Text(
                         'Riwayat Transaksi',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: c.darkText,
-                        ),
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: c.darkText),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
                           color: c.primaryGreen.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Text(
                           '${riwayat.length} Transaksi',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: c.primaryGreen,
-                          ),
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: c.primaryGreen),
                         ),
                       ),
                     ],
@@ -661,15 +587,14 @@ class _DashboardKasirScreenState extends ConsumerState<DashboardKasirScreen> {
                     child: ListView.separated(
                       controller: scrollController,
                       itemCount: riwayat.length,
-                      separatorBuilder: (_, _) => const SizedBox(height: 8),
+                      separatorBuilder: (_, __) => const SizedBox(height: 8),
                       itemBuilder: (_, i) {
                         final item = riwayat[i];
                         return InkWell(
                           onTap: () {
                             Navigator.pop(ctx);
                             _showDetailTransaksi(
-                              context,
-                              c,
+                              context, c,
                               item['title'] as String,
                               item['time'] as String,
                               item['metode'] as String,
@@ -687,51 +612,25 @@ class _DashboardKasirScreenState extends ConsumerState<DashboardKasirScreen> {
                             child: Row(
                               children: [
                                 Container(
-                                  width: 40,
-                                  height: 40,
+                                  width: 40, height: 40,
                                   decoration: BoxDecoration(
                                     color: c.surfaceContainer,
                                     shape: BoxShape.circle,
                                   ),
-                                  child: Icon(
-                                    item['icon'] as IconData,
-                                    color: c.greyText,
-                                    size: 20,
-                                  ),
+                                  child: Icon(item['icon'] as IconData, color: c.greyText, size: 20),
                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Text(
-                                        item['title'] as String,
-                                        style: TextStyle(
-                                          color: c.darkText,
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
+                                      Text(item['title'] as String, style: TextStyle(color: c.darkText, fontSize: 14, fontWeight: FontWeight.bold)),
                                       const SizedBox(height: 2),
-                                      Text(
-                                        '${item['time']} • ${item['metode']}',
-                                        style: TextStyle(
-                                          color: c.greyText,
-                                          fontSize: 12,
-                                        ),
-                                      ),
+                                      Text('${item['time']} • ${item['metode']}', style: TextStyle(color: c.greyText, fontSize: 12)),
                                     ],
                                   ),
                                 ),
-                                Text(
-                                  item['amount'] as String,
-                                  style: TextStyle(
-                                    color: item['color'] as Color,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
+                                Text(item['amount'] as String, style: TextStyle(color: item['color'] as Color, fontSize: 16, fontWeight: FontWeight.bold)),
                               ],
                             ),
                           ),
@@ -749,14 +648,7 @@ class _DashboardKasirScreenState extends ConsumerState<DashboardKasirScreen> {
   }
 
   // ─── Detail Transaksi Dialog ──────────────────────────────────────
-  void _showDetailTransaksi(
-    BuildContext context,
-    AppColors c,
-    String title,
-    String time,
-    String metode,
-    String amount,
-  ) {
+  void _showDetailTransaksi(BuildContext context, AppColors c, String title, String time, String metode, String amount) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -766,16 +658,7 @@ class _DashboardKasirScreenState extends ConsumerState<DashboardKasirScreen> {
           children: [
             Icon(Icons.receipt_long, color: c.primary),
             const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                title,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: c.onSurface,
-                ),
-              ),
-            ),
+            Expanded(child: Text(title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: c.onSurface))),
           ],
         ),
         content: Column(
@@ -790,22 +673,8 @@ class _DashboardKasirScreenState extends ConsumerState<DashboardKasirScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Total',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: c.onSurface,
-                  ),
-                ),
-                Text(
-                  amount,
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: c.primaryGreen,
-                  ),
-                ),
+                Text('Total', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: c.onSurface)),
+                Text(amount, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: c.primaryGreen)),
               ],
             ),
           ],
@@ -825,14 +694,7 @@ class _DashboardKasirScreenState extends ConsumerState<DashboardKasirScreen> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(label, style: TextStyle(fontSize: 14, color: c.greyText)),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: c.onSurface,
-          ),
-        ),
+        Text(value, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: c.onSurface)),
       ],
     );
   }
@@ -851,10 +713,7 @@ class _DashboardKasirScreenState extends ConsumerState<DashboardKasirScreen> {
       unselectedItemColor: c.greyText,
       items: const [
         BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Beranda'),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.point_of_sale),
-          label: 'Kasir',
-        ),
+        BottomNavigationBarItem(icon: Icon(Icons.point_of_sale), label: 'Kasir'),
         BottomNavigationBarItem(icon: Icon(Icons.receipt_long), label: 'Utang'),
         BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Atur'),
       ],

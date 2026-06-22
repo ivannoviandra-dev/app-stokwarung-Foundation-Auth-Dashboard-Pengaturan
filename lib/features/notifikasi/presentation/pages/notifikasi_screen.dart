@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../dashboard/presentation/providers/dashboard_provider.dart';
+import '../../../barang/presentation/providers/barang_provider.dart';
 import '../../../../core/services/notification_service.dart';
 
 class NotifikasiScreen extends ConsumerStatefulWidget {
@@ -103,11 +104,7 @@ class _NotifikasiScreenState extends ConsumerState<NotifikasiScreen> {
                       color: c.primaryContainer,
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(
-                      Icons.notifications_none,
-                      size: 40,
-                      color: c.primary,
-                    ),
+                    child: Icon(Icons.notifications_none, size: 40, color: c.primary),
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -122,7 +119,10 @@ class _NotifikasiScreenState extends ConsumerState<NotifikasiScreen> {
                   Text(
                     'Semua stok aman dan tidak ada\nbarang yang mendekati kedaluwarsa.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 14, color: c.onSurfaceVariant),
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: c.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),
@@ -136,10 +136,7 @@ class _NotifikasiScreenState extends ConsumerState<NotifikasiScreen> {
                 final icon = _getIcon(item.type);
 
                 return Container(
-                  margin: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 4,
-                  ),
+                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                   decoration: BoxDecoration(
                     color: c.cardColor,
                     borderRadius: BorderRadius.circular(12),
@@ -153,10 +150,7 @@ class _NotifikasiScreenState extends ConsumerState<NotifikasiScreen> {
                     ],
                   ),
                   child: ListTile(
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     leading: Container(
                       width: 44,
                       height: 44,
@@ -185,10 +179,7 @@ class _NotifikasiScreenState extends ConsumerState<NotifikasiScreen> {
                       ),
                     ),
                     trailing: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: iconColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),

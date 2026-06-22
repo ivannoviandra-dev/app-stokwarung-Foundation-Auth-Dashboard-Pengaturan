@@ -183,6 +183,15 @@ class _MidtransPaymentScreenState extends State<MidtransPaymentScreen> {
             ),
           ],
         ),
+        actions: [
+          TextButton(
+            onPressed: () => _finishPayment(MidtransPaymentStatus.success),
+            child: const Text(
+              'Simulasi Sukses',
+              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green),
+            ),
+          ),
+        ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(3.0),
           child: _isLoading && !kIsWeb
