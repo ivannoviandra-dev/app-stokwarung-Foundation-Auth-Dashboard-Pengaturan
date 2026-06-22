@@ -22,9 +22,56 @@ class KasirScreen extends ConsumerStatefulWidget {
 
 class _KasirScreenState extends ConsumerState<KasirScreen> {
   final TextEditingController _searchController = TextEditingController();
+  List<dynamic> _searchResults = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController.addListener(_onSearchChanged);
+  }
+
+  void _onSearchChanged() {
+    final value = _searchController.text.trim();
+    if (value.isEmpty) {
+      if (_searchResults.isNotEmpty) {
+        setState(() => _searchResults = []);
+      }
+      return;
+    }
+    
+    final semuaBarang = ref.read(barangProvider).semuaBarang;
+    final found = semuaBarang.where((b) => 
+      b.nama.toLowerCase().contains(value.toLowerCase()) || 
+      (b.barcode != null && b.barcode!.contains(value))
+    ).toList();
+    
+    setState(() {
+      _searchResults = found;
+    });
+  }
+
+  void _tambahKeKeranjang(dynamic barang) {
+    setState(() {
+      final index = _keranjang.indexWhere((item) =>
+          item['nama'].toString().toLowerCase() ==
+              barang.nama.toLowerCase());
+      if (index >= 0) {
+        _keranjang[index]['qty'] += 1;
+      } else {
+        _keranjang.add({
+          'id': barang.id,
+          'nama': barang.nama, 
+          'harga': barang.harga, 
+          'harga_modal': barang.hargaBeli,
+          'qty': 1
+        });
+      }
+    });
+  }
 
   @override
   void dispose() {
+    _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
     super.dispose();
   }
@@ -498,22 +545,7 @@ class _KasirScreenState extends ConsumerState<KasirScreen> {
 
                           if (foundBarang.isNotEmpty) {
                             final barang = foundBarang.first;
-                            setState(() {
-                              final index = _keranjang.indexWhere((item) =>
-                                  item['nama'].toString().toLowerCase() ==
-                                      barang.nama.toLowerCase());
-                              if (index >= 0) {
-                                _keranjang[index]['qty'] += 1;
-                              } else {
-                                _keranjang.add({
-                                  'id': barang.id,
-                                  'nama': barang.nama, 
-                                  'harga': barang.harga, 
-                                  'harga_modal': barang.hargaBeli,
-                                  'qty': 1
-                                });
-                              }
-                            });
+                            _tambahKeKeranjang(barang);
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(content: Text('Barang tidak ditemukan!')),
@@ -556,22 +588,7 @@ class _KasirScreenState extends ConsumerState<KasirScreen> {
 
                               if (foundBarang.isNotEmpty) {
                                 final barang = foundBarang.first;
-                                setState(() {
-                                  final index = _keranjang.indexWhere((item) =>
-                                      item['nama'].toString().toLowerCase() ==
-                                          barang.nama.toLowerCase());
-                                  if (index >= 0) {
-                                    _keranjang[index]['qty'] += 1;
-                                  } else {
-                                    _keranjang.add({
-                                      'id': barang.id,
-                                      'nama': barang.nama, 
-                                      'harga': barang.harga, 
-                                      'harga_modal': barang.hargaBeli,
-                                      'qty': 1
-                                    });
-                                  }
-                                });
+                                _tambahKeKeranjang(barang);
                               } else {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(content: Text('Barang tidak ditemukan!')),
@@ -589,6 +606,40 @@ class _KasirScreenState extends ConsumerState<KasirScreen> {
               ),
             ),
           ),
+
+          // Search Results
+          if (_searchResults.isNotEmpty)
+            Container(
+              margin: const EdgeInsets.only(left: 16, right: 16, top: 4),
+              constraints: const BoxConstraints(maxHeight: 250),
+              decoration: BoxDecoration(
+                color: c.surface,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: c.outlineVariant),
+                boxShadow: [
+                  BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 4, offset: const Offset(0, 2))
+                ]
+              ),
+              child: ListView.separated(
+                shrinkWrap: true,
+                padding: EdgeInsets.zero,
+                itemCount: _searchResults.length,
+                separatorBuilder: (_, __) => Divider(height: 1, color: c.surfaceContainerHighest),
+                itemBuilder: (context, index) {
+                  final barang = _searchResults[index];
+                  return ListTile(
+                    title: Text(barang.nama, style: TextStyle(color: c.onSurface, fontWeight: FontWeight.w500)),
+                    subtitle: Text(_formatCurrency(barang.harga), style: TextStyle(color: c.primary, fontSize: 13)),
+                    trailing: Icon(Icons.add_shopping_cart, color: c.primary, size: 20),
+                    onTap: () {
+                      _tambahKeKeranjang(barang);
+                      _searchController.clear();
+                      FocusScope.of(context).unfocus();
+                    },
+                  );
+                },
+              ),
+            ),
 
           // Keranjang List
           Expanded(

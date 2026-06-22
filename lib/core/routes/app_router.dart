@@ -11,19 +11,21 @@ import '../../features/reminder/presentation/pages/perlu_perhatian_screen.dart';
 import '../../features/kasir/presentation/pages/kasir_screen.dart';
 import '../../features/laporan/presentation/pages/laporan_screen.dart';
 import '../../features/pengaturan/presentation/pages/pengaturan_screen.dart';
+import '../../features/splash/presentation/pages/splash_screen.dart';
 import '../widgets/main_layout_screen.dart';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 final appRouter = GoRouter(
-  initialLocation: '/login',
+  initialLocation: '/splash',
   redirect: (context, state) {
     final auth = Supabase.instance.client.auth;
     final session = auth.currentSession;
     final user = auth.currentUser;
     final isLoggingIn = state.matchedLocation == '/login' || state.matchedLocation == '/register';
+    final isSplash = state.matchedLocation == '/splash';
 
-    if (session == null && !isLoggingIn) {
+    if (session == null && !isLoggingIn && !isSplash) {
       return '/login';
     }
 
@@ -39,6 +41,10 @@ final appRouter = GoRouter(
     return null;
   },
   routes: [
+    GoRoute(
+      path: '/splash',
+      builder: (context, state) => const SplashScreen(),
+    ),
     GoRoute(
       path: '/login',
       builder: (context, state) => const LoginScreen(),

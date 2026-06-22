@@ -5,7 +5,8 @@ import 'package:http/http.dart' as http;
 
 // Conditional imports for web JS interop
 import 'midtrans_web_stub.dart'
-    if (dart.library.js_interop) 'midtrans_web_impl.dart' as midtrans_web;
+    if (dart.library.js_interop) 'midtrans_web_impl.dart'
+    as midtrans_web;
 
 /// Service untuk berkomunikasi dengan Midtrans Snap API (Sandbox).
 ///
@@ -16,8 +17,8 @@ import 'midtrans_web_stub.dart'
 /// Untuk production, request Snap Token HARUS dilakukan di backend (server-side).
 class MidtransService {
   // Sandbox credentials
-  static const String _serverKey = 'YOUR_SERVER_KEY'; // GANTI DENGAN SERVER KEY ANDA
-  static const String _clientKey = 'Mid-client-CyW1GyJqKIUCur1n';
+  static String get _serverKey => 'YOUR_SERVER_KEY'; // GANTI DENGAN SERVER KEY ANDA
+  static String get _clientKey => 'Mid-client-CyW1GyJqKIUCur1n';
 
   // Sandbox Snap API endpoint
   static const String _snapApiUrl =
@@ -51,6 +52,9 @@ class MidtransService {
     };
 
     debugPrint('[Midtrans] Creating Snap Token for order: $orderId, amount: $grossAmount');
+    debugPrint('[Midtrans] DEBUG _serverKey: "$_serverKey" (length: ${_serverKey.length})');
+    debugPrint('[Midtrans] DEBUG authString: "$authString"');
+    debugPrint('[Midtrans] DEBUG URL: $_snapApiUrl');
 
     final response = await http.post(
       Uri.parse(_snapApiUrl),
@@ -84,7 +88,9 @@ class MidtransService {
   /// Hanya bisa digunakan di Flutter Web.
   static Future<String> openSnapPopup(String snapToken) {
     if (!kIsWeb) {
-      throw UnsupportedError('openSnapPopup hanya bisa digunakan di Flutter Web');
+      throw UnsupportedError(
+        'openSnapPopup hanya bisa digunakan di Flutter Web',
+      );
     }
     return midtrans_web.openSnapPopup(snapToken);
   }
