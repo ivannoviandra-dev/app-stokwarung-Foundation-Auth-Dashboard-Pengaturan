@@ -17,7 +17,8 @@ import 'midtrans_web_stub.dart'
 /// Untuk production, request Snap Token HARUS dilakukan di backend (server-side).
 class MidtransService {
   // Sandbox credentials
-  static String get _serverKey => 'YOUR_SERVER_KEY'; // GANTI DENGAN SERVER KEY ANDA
+  static String get _serverKey =>
+      'YOUR_SERVER_KEY'; // GANTI DENGAN SERVER KEY ANDA
   static String get _clientKey => 'Mid-client-CyW1GyJqKIUCur1n';
 
   // Sandbox Snap API endpoint
@@ -51,8 +52,12 @@ class MidtransService {
       'credit_card': {'secure': true},
     };
 
-    debugPrint('[Midtrans] Creating Snap Token for order: $orderId, amount: $grossAmount');
-    debugPrint('[Midtrans] DEBUG _serverKey: "$_serverKey" (length: ${_serverKey.length})');
+    debugPrint(
+      '[Midtrans] Creating Snap Token for order: $orderId, amount: $grossAmount',
+    );
+    debugPrint(
+      '[Midtrans] DEBUG _serverKey: "$_serverKey" (length: ${_serverKey.length})',
+    );
     debugPrint('[Midtrans] DEBUG authString: "$authString"');
     debugPrint('[Midtrans] DEBUG URL: $_snapApiUrl');
 

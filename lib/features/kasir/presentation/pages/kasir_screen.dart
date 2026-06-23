@@ -473,6 +473,7 @@ class _KasirScreenState extends ConsumerState<KasirScreen> {
     final c = AppColors.of(context);
     final userMetadata = Supabase.instance.client.auth.currentUser?.userMetadata;
     final namaToko = userMetadata?['nama_toko'] as String? ?? 'Warung Saya';
+    final isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
 
     return Scaffold(
       backgroundColor: c.neutralSurface,
@@ -506,7 +507,7 @@ class _KasirScreenState extends ConsumerState<KasirScreen> {
           child: Container(color: c.outlineVariant, height: 1.0),
         ),
       ),
-      resizeToAvoidBottomInset: false,
+      resizeToAvoidBottomInset: true,
       body: Column(
         children: [
           // Search / Scan Area
@@ -609,9 +610,10 @@ class _KasirScreenState extends ConsumerState<KasirScreen> {
 
           // Search Results
           if (_searchResults.isNotEmpty)
-            Container(
-              margin: const EdgeInsets.only(left: 16, right: 16, top: 4),
-              constraints: const BoxConstraints(maxHeight: 250),
+            Flexible(
+              child: Container(
+                margin: const EdgeInsets.only(left: 16, right: 16, top: 4),
+                constraints: const BoxConstraints(maxHeight: 250),
               decoration: BoxDecoration(
                 color: c.surface,
                 borderRadius: BorderRadius.circular(8),
@@ -640,12 +642,18 @@ class _KasirScreenState extends ConsumerState<KasirScreen> {
                 },
               ),
             ),
+          ),
 
           // Keranjang List
           Expanded(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-              child: Column(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                if (constraints.maxHeight < 120) {
+                  return const SizedBox.shrink();
+                }
+                return Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                  child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Row(
@@ -695,6 +703,7 @@ class _KasirScreenState extends ConsumerState<KasirScreen> {
                                 child: FittedBox(
                                   fit: BoxFit.scaleDown,
                                   child: Column(
+                                    mainAxisSize: MainAxisSize.min,
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
                                       Icon(Icons.shopping_cart_checkout, size: 48, color: c.outlineVariant),
@@ -774,11 +783,13 @@ class _KasirScreenState extends ConsumerState<KasirScreen> {
                   ),
                 ],
               ),
-            ),
-          ),
-        ],
+            );
+          },
+        ),
       ),
-      bottomNavigationBar: Container(
+    ],
+      ),
+      bottomNavigationBar: isKeyboardOpen ? const SizedBox.shrink() : Container(
         padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
         decoration: BoxDecoration(
           color: c.surface,
