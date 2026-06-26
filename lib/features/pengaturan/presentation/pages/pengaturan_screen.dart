@@ -320,6 +320,7 @@ class PengaturanScreen extends ConsumerWidget {
                       max: 20,
                       divisions: 19,
                       onChanged: (val) => notifier.updateStokMinimum(val.round()),
+                      onChangeEnd: (val) => notifier.saveStokMinimum(val.round()),
                     ),
                   ),
                   Row(

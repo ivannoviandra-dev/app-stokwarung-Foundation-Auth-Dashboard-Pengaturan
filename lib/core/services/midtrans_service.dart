@@ -18,7 +18,7 @@ import 'midtrans_web_stub.dart'
 class MidtransService {
   // Sandbox credentials
   static String get _serverKey =>
-      'YOUR_SERVER_KEY'; // GANTI DENGAN SERVER KEY ANDA
+      'your-server-key'; // GANTI DENGAN SERVER KEY ANDA
   static String get _clientKey => 'Mid-client-CyW1GyJqKIUCur1n';
 
   // Sandbox Snap API endpoint

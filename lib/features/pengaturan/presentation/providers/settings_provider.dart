@@ -49,11 +49,17 @@ class SettingsNotifier extends Notifier<SettingsState> {
     final namaToko = (metadata?['nama_toko'] as String?)?.trim() ?? '';
     final alamat = (metadata?['alamat'] as String?)?.trim() ?? '';
     final nomorHp = (metadata?['nomor_hp'] as String?)?.trim() ?? '';
+    final stokMinimum = (metadata?['stok_minimum'] as num?)?.toInt() ?? 5;
+    final darkMode = (metadata?['dark_mode'] as bool?) ?? false;
+    final expiryList = (metadata?['selected_expiry'] as List<dynamic>?)?.cast<String>();
     
     return SettingsState(
       namaToko: namaToko.isNotEmpty ? namaToko : 'Toko Saya',
       alamat: alamat,
       nomorHp: nomorHp,
+      stokMinimum: stokMinimum,
+      darkMode: darkMode,
+      selectedExpiry: expiryList != null ? expiryList.toSet() : null,
     );
   }
 
@@ -95,15 +101,32 @@ class SettingsNotifier extends Notifier<SettingsState> {
     }
   }
 
-  void toggleDarkMode(bool value) {
+  Future<void> toggleDarkMode(bool value) async {
     state = state.copyWith(darkMode: value);
+    try {
+      await Supabase.instance.client.auth.updateUser(
+        UserAttributes(data: {'dark_mode': value}),
+      );
+    } catch (e) {
+      print('Error saving dark mode: $e');
+    }
   }
 
   void updateStokMinimum(int value) {
     state = state.copyWith(stokMinimum: value);
   }
 
-  void toggleExpiry(String label) {
+  Future<void> saveStokMinimum(int value) async {
+    try {
+      await Supabase.instance.client.auth.updateUser(
+        UserAttributes(data: {'stok_minimum': value}),
+      );
+    } catch (e) {
+      print('Error saving stok minimum: $e');
+    }
+  }
+
+  Future<void> toggleExpiry(String label) async {
     final current = Set<String>.from(state.selectedExpiry);
     if (current.contains(label)) {
       current.remove(label);
@@ -111,6 +134,14 @@ class SettingsNotifier extends Notifier<SettingsState> {
       current.add(label);
     }
     state = state.copyWith(selectedExpiry: current);
+    
+    try {
+      await Supabase.instance.client.auth.updateUser(
+        UserAttributes(data: {'selected_expiry': current.toList()}),
+      );
+    } catch (e) {
+      print('Error saving expiry: $e');
+    }
   }
 
   Future<bool> changePassword(String oldPassword, String newPassword) async {
